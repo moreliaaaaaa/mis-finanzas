@@ -2,20 +2,12 @@
   <section class="panel history-panel">
     <div class="panel-header">
       <div class="panel-title">
-        <img
-          class="asset-icon panel-title-icon"
-          src="/src/assets/icons/list.svg"
-          alt=""
-        />
+        <i data-lucide="list" class="asset-icon panel-title-icon"></i>
         <span>Últimos Movimientos</span>
       </div>
       <div class="panel-actions">
         <button type="button" class="btn-export" onclick="window.exportarCSV()">
-          <img
-            class="asset-icon"
-            src="/src/assets/icons/file_export.svg"
-            alt=""
-          />
+          <i data-lucide="download"></i>
           Exportar CSV
         </button>
         <button type="button" class="btn-export" onclick="window.exportarPDF()">
@@ -116,7 +108,7 @@
     <div id="lista-movimientos-dashboard" class="history-list">
       <div class="empty-state">
         <div class="empty-state-icon">
-          <img class="asset-icon" src="/src/assets/icons/note_add.svg" alt="" />
+          <i data-lucide="inbox"></i>
         </div>
         <div class="empty-state-text">No hay registros cargados aún.</div>
       </div>

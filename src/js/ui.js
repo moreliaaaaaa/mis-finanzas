@@ -125,7 +125,8 @@ export function cargarTema() {
  */
 export async function initializarIconos() {
   try {
-    createIcons({ icons });
+    // Crear instancia de createIcons para procesar [data-lucide="..."] en el DOM
+    createIcons();
   } catch (error) {
     console.warn("Lucide no disponible:", error);
   }
