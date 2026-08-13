@@ -30,11 +30,72 @@
       </div>
 
       <div class="profile-card-summary">
-        <div class="profile-avatar-badge">MF</div>
+        <div class="profile-avatar-badge" id="profile-avatar-badge">MF</div>
         <div>
-          <h3>Mi perfil</h3>
-          <p>Usuario de Morelia Finanzas</p>
+          <h3 id="profile-user-name">Mi perfil</h3>
+          <p id="profile-user-email">Usuario de Morelia Finanzas</p>
         </div>
+      </div>
+
+      <div class="panel" id="profile-edit-panel" hidden>
+        <div class="panel-header">
+          <div class="panel-title">
+            <img
+              class="asset-icon panel-title-icon"
+              src="/src/assets/icons/pencil.svg"
+              alt=""
+            />
+            <span>Editar mi información</span>
+          </div>
+        </div>
+
+        <form id="profile-edit-form" novalidate>
+          <div class="profile-photo-upload">
+            <div class="profile-avatar-badge profile-avatar-badge--lg" id="profile-edit-avatar">
+              MF
+            </div>
+            <div class="profile-photo-actions">
+              <label class="btn-secondary" for="profile-photo-input">
+                Subir foto
+              </label>
+              <input type="file" id="profile-photo-input" accept="image/*" hidden />
+              <button type="button" id="profile-photo-remove" class="btn-secondary">
+                Quitar foto
+              </button>
+            </div>
+          </div>
+
+          <label class="profile-edit-field" for="profile-edit-name">
+            <span>Nombre</span>
+            <input
+              type="text"
+              id="profile-edit-name"
+              name="name"
+              placeholder="Tu nombre"
+              autocomplete="name"
+              maxlength="100"
+              required
+            />
+          </label>
+
+          <label class="profile-edit-field" for="profile-edit-email">
+            <span>Correo electrónico</span>
+            <input
+              type="email"
+              id="profile-edit-email"
+              name="email"
+              autocomplete="email"
+              disabled
+            />
+          </label>
+
+          <div class="profile-edit-actions">
+            <button type="submit" class="btn-primary">Guardar cambios</button>
+            <button type="button" id="profile-edit-cancel" class="btn-secondary">
+              Cancelar
+            </button>
+          </div>
+        </form>
       </div>
 
       <div class="profile-options">
@@ -58,7 +119,9 @@
 
         <div class="profile-option-row">
           <span>Mi información</span>
-          <button type="button" class="btn-secondary" disabled>Editar</button>
+          <button type="button" id="profile-edit-info-btn" class="btn-secondary">
+            Editar
+          </button>
         </div>
 
         <div class="profile-option-row">

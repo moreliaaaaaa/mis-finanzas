@@ -10,6 +10,22 @@ import { getSupabaseClient } from "../supabase.js";
 
 const STORAGE_USERS = "misfinanzas_users";
 const STORAGE_SESSION = "misfinanzas_session";
+
+let ultimoErrorAuth = null;
+
+const ERRORES_TRADUCIDOS = [
+  { regex: /invalid login credentials|invalid_grant|invalid_credentials/i, msg: "Correo o contraseña incorrectos." },
+  { regex: /email not confirmed|email_not_confirmed/i, msg: "Debes confirmar tu correo con el enlace que te enviamos antes de iniciar sesión." },
+  { regex: /rate limit|too many requests/i, msg: "Demasiados intentos. Espera un momento y vuelve a intentar." },
+  { regex: /failed to fetch|network|connection/i, msg: "No se pudo conectar con el servidor. Revisa tu internet e inténtalo de nuevo." },
+];
+
+function traducirErrorAuth(error) {
+  const mensajeOriginal =
+    error?.message || error?.msg || error?.error_description || "Credenciales incorrectas";
+  const coincidencia = ERRORES_TRADUCIDOS.find(({ regex }) => regex.test(mensajeOriginal));
+  return coincidencia ? coincidencia.msg : mensajeOriginal;
+}
 const COUNTRY_OPTIONS = [
   { code: "AR", label: "Argentina", currency: "ARS", language: "es", locale: "es-AR" },
   { code: "BO", label: "Bolivia", currency: "BOB", language: "es", locale: "es-BO" },
@@ -73,6 +89,26 @@ function guardarSesionAuth(sessionData = {}) {
   };
 
   guardarEnStorage(STORAGE_SESSION, session);
+
+  if (session.userId) {
+    const users = obtenerDelStorage(STORAGE_USERS) || {};
+    const existente = users[session.userId];
+    users[session.userId] = {
+      id: session.userId,
+      nombre: session.userName || existente?.nombre || "Usuario",
+      email: session.userEmail || existente?.email || "",
+      foto: existente?.foto || null,
+      local: existente?.local ?? false,
+      ...(existente?.passwordHash ? { passwordHash: existente.passwordHash } : {}),
+      ...(existente?.country ? { country: existente.country } : {}),
+      ...(existente?.countryName ? { countryName: existente.countryName } : {}),
+      ...(existente?.currency ? { currency: existente.currency } : {}),
+      ...(existente?.locale ? { locale: existente.locale } : {}),
+      ...(existente?.createdAt ? { createdAt: existente.createdAt } : {}),
+    };
+    guardarEnStorage(STORAGE_USERS, users);
+  }
+
   setState({
     userId: session.userId,
     userName: session.userName,
@@ -80,6 +116,34 @@ function guardarSesionAuth(sessionData = {}) {
   });
 
   return session;
+}
+
+function redimensionarImagen(archivo, maxSize = 256) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("El archivo seleccionado no es una imagen valida"));
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const width = Math.max(1, Math.round(img.width * scale));
+          const height = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        } catch (error) {
+          reject(new Error("No se pudo procesar la imagen"));
+        }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(archivo);
+  });
 }
 
 function limpiarSesionAuth() {
@@ -156,6 +220,18 @@ export async function registrarUsuario(nombre, email, password, country = "CL") 
       return false;
     }
 
+    if (!data?.session && (user.identities?.length ?? 1) === 0) {
+      ultimoErrorAuth = "Este correo ya está registrado. Inicia sesión o usa ¿Olvidaste tu contraseña?";
+      mostrarToast("error", ultimoErrorAuth);
+      return false;
+    }
+
+    if (!data?.session) {
+      ultimoErrorAuth = "Revisa tu correo para confirmar la cuenta y luego inicia sesión.";
+      mostrarToast("success", ultimoErrorAuth);
+      return false;
+    }
+
     guardarSesionAuth({
       userId: user.id,
       userName: nombre.trim() || user.email,
@@ -207,40 +283,66 @@ async function registrarUsuarioLocal(nombre, email, password, country = "CL") {
 
 export async function iniciarSesion(email, password) {
   if (!email || !password) {
+    ultimoErrorAuth = "Ingresa tu correo y contraseña.";
     mostrarToast("error", "Ingrese email y contrasena");
     return false;
   }
 
   const supabase = getSupabaseClient();
-  if (!supabase) {
-    return iniciarSesionLocal(email, password);
-  }
+  if (supabase) {
+    let errorSupabase = null;
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    if (error) throw error;
+      if (!error && data?.user) {
+        const user = data.user;
+        const nombre =
+          user?.user_metadata?.nombre ||
+          user?.user_metadata?.name ||
+          user?.user_metadata?.full_name ||
+          user?.email ||
+          "Usuario";
 
-    const user = data?.user;
-    const nombre =
-      user?.user_metadata?.nombre ||
-      user?.user_metadata?.name ||
-      user?.user_metadata?.full_name ||
-      user?.email ||
-      "Usuario";
+        guardarSesionAuth({ userId: user.id, userName: nombre, userEmail: user.email });
+        mostrarToast("success", `Bienvenido/a ${nombre}`);
+        return true;
+      }
 
-    guardarSesionAuth({ userId: user.id, userName: nombre, userEmail: user.email });
+      errorSupabase = error;
+    } catch (error) {
+      console.error("Error iniciando sesion:", error);
+      errorSupabase = error;
+    }
 
-    mostrarToast("success", `Bienvenido/a ${nombre}`);
-    return true;
-  } catch (error) {
-    console.error("Error iniciando sesion:", error);
-    mostrarToast("error", error?.message || "Credenciales incorrectas");
+    // Respaldo: si la cuenta se creó en modo local (antes de conectar Supabase),
+    // el usuario vive en este navegador y no existe en la nube.
+    const emailNormalizado = email.trim().toLowerCase();
+    const userLocal = Object.values(obtenerDelStorage(STORAGE_USERS) || {}).find(
+      (item) => item.email === emailNormalizado
+    );
+
+    if (userLocal && userLocal.passwordHash === (await obtenerPasswordHash(password))) {
+      guardarSesionAuth({
+        userId: userLocal.id,
+        userName: userLocal.nombre,
+        userEmail: userLocal.email,
+      });
+      mostrarToast("success", `Bienvenido/a ${userLocal.nombre || userLocal.email}`);
+      ultimoErrorAuth = null;
+      return true;
+    }
+
+    const mensaje = traducirErrorAuth(errorSupabase);
+    ultimoErrorAuth = mensaje;
+    mostrarToast("error", mensaje);
     return false;
   }
+
+  return iniciarSesionLocal(email, password);
 }
 
 async function iniciarSesionLocal(email, password) {
@@ -252,7 +354,8 @@ async function iniciarSesionLocal(email, password) {
   );
 
   if (!user) {
-    mostrarToast("error", "Credenciales incorrectas");
+    ultimoErrorAuth = "Correo o contraseña incorrectos.";
+    mostrarToast("error", ultimoErrorAuth);
     return false;
   }
 
@@ -319,6 +422,7 @@ export function obtenerUsuarioActual() {
       id: state.userId,
       nombre: state.userName || "Usuario",
       email: state.userEmail || "",
+      foto: null,
     };
   }
 
@@ -326,6 +430,7 @@ export function obtenerUsuarioActual() {
     id: user.id,
     nombre: user.nombre,
     email: user.email,
+    foto: user.foto || null,
   };
 }
 
@@ -334,20 +439,19 @@ export function actualizarPerfil(datos) {
   if (!state.userId) return false;
 
   const users = obtenerDelStorage(STORAGE_USERS) || {};
-  const user = users[state.userId];
+  const user =
+    users[state.userId] || {
+      id: state.userId,
+      nombre: state.userName || "Usuario",
+      email: state.userEmail || "",
+      foto: null,
+    };
 
-  if (!user) return false;
-
-  if (datos.nombre) user.nombre = datos.nombre;
-  if (datos.email) {
-    const emailEnUso = Object.values(users).some(
-      (u) => u.email === datos.email && u.id !== state.userId
-    );
-    if (emailEnUso) {
-      mostrarToast("error", "Este email ya esta en uso");
-      return false;
-    }
-    user.email = datos.email;
+  if (datos.nombre && datos.nombre.trim().length >= 2) {
+    user.nombre = datos.nombre.trim();
+  }
+  if (typeof datos.foto === "string") {
+    user.foto = datos.foto;
   }
 
   users[state.userId] = user;
@@ -359,8 +463,124 @@ export function actualizarPerfil(datos) {
     userEmail: user.email,
   });
 
+  // Sincronizar el nombre con Supabase (si el usuario es de la nube)
+  const supabase = getSupabaseClient();
+  if (supabase && !user.local) {
+    supabase.auth
+      .updateUser({
+        data: { nombre: user.nombre, name: user.nombre, full_name: user.nombre },
+      })
+      .catch((error) => console.warn("No se pudo sincronizar el perfil con la nube:", error));
+  }
+
   mostrarToast("success", "Perfil actualizado");
   return true;
+}
+
+let perfilEditInicializado = false;
+
+export function renderizarPerfil() {
+  const vista = document.getElementById("vista-perfil");
+  if (!vista) return;
+
+  const user = obtenerUsuarioActual();
+
+  const setAvatar = (containerId, foto, nombre) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+    if (foto) {
+      const img = document.createElement("img");
+      img.src = foto;
+      img.alt = "Foto de perfil";
+      img.classList.add("profile-avatar-img");
+      container.appendChild(img);
+    } else {
+      container.textContent = (nombre || "U").charAt(0).toUpperCase();
+    }
+  };
+
+  setAvatar("profile-avatar-badge", user?.foto, user?.nombre);
+
+  const nameEl = document.getElementById("profile-user-name");
+  const emailEl = document.getElementById("profile-user-email");
+  if (nameEl) nameEl.textContent = user?.nombre || "Mi perfil";
+  if (emailEl) emailEl.textContent = user?.email || "Usuario de Morelia Finanzas";
+
+  if (perfilEditInicializado) return;
+  perfilEditInicializado = true;
+
+  const editBtn = document.getElementById("profile-edit-info-btn");
+  const editPanel = document.getElementById("profile-edit-panel");
+  const editForm = document.getElementById("profile-edit-form");
+  const nameInput = document.getElementById("profile-edit-name");
+  const emailInput = document.getElementById("profile-edit-email");
+  const photoInput = document.getElementById("profile-photo-input");
+  const photoRemoveBtn = document.getElementById("profile-photo-remove");
+  const cancelBtn = document.getElementById("profile-edit-cancel");
+
+  let fotoPendiente = null;
+
+  const abrirEdicion = () => {
+    if (!editPanel || !nameInput) return;
+    const usuario = obtenerUsuarioActual();
+    nameInput.value = usuario?.nombre || "";
+    if (emailInput) emailInput.value = usuario?.email || "";
+    fotoPendiente = null;
+    setAvatar("profile-edit-avatar", usuario?.foto, usuario?.nombre);
+    editPanel.hidden = false;
+    editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  editBtn?.addEventListener("click", abrirEdicion);
+
+  cancelBtn?.addEventListener("click", () => {
+    if (editPanel) editPanel.hidden = true;
+    if (photoInput) photoInput.value = "";
+  });
+
+  photoInput?.addEventListener("change", async () => {
+    const archivo = photoInput.files?.[0];
+    if (!archivo) return;
+    if (!archivo.type.startsWith("image/")) {
+      mostrarToast("error", "Selecciona un archivo de imagen");
+      return;
+    }
+    try {
+      fotoPendiente = await redimensionarImagen(archivo);
+      setAvatar("profile-edit-avatar", fotoPendiente, user?.nombre);
+    } catch (error) {
+      mostrarToast("error", error?.message || "No se pudo procesar la imagen");
+    }
+  });
+
+  photoRemoveBtn?.addEventListener("click", () => {
+    fotoPendiente = "";
+    setAvatar("profile-edit-avatar", null, user?.nombre);
+    if (photoInput) photoInput.value = "";
+  });
+
+  editForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const nombre = nameInput?.value?.trim() || "";
+    if (nombre.length < 2) {
+      mostrarToast("error", "El nombre debe tener al menos 2 caracteres");
+      return;
+    }
+
+    const datos = { nombre };
+    if (fotoPendiente !== null) {
+      datos.foto = fotoPendiente;
+    }
+
+    const ok = actualizarPerfil(datos);
+    if (!ok) return;
+
+    if (editPanel) editPanel.hidden = true;
+    if (photoInput) photoInput.value = "";
+    renderizarPerfil();
+    renderizarPanelAuth("auth-panel");
+  });
 }
 
 export async function renderizarPanelAuth(containerId = "auth-panel") {
@@ -372,10 +592,13 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
 
   if (state.userId) {
     const user = obtenerUsuarioActual();
+    const avatarHtml = user?.foto
+      ? `<img src="${user.foto}" alt="Foto de perfil" class="user-avatar">`
+      : `<div class="user-avatar">${user?.nombre?.charAt(0) || "U"}</div>`;
     container.innerHTML = `
       <div class="auth-panel user-panel">
         <div class="user-info">
-          <div class="user-avatar">${user?.nombre?.charAt(0) || "U"}</div>
+          ${avatarHtml}
           <div class="user-details">
             <span class="user-name">${user?.nombre || "Usuario"}</span>
             <span class="user-email">${user?.email || ""}</span>
@@ -492,6 +715,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
   };
 
   const refreshAuthPanels = () => {
+    renderizarPerfil();
     window.ocultarLoginScreen?.();
   };
 
@@ -501,6 +725,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
     const nombre = nameInput?.value || "";
     const country = countryInput?.value || "CL";
 
+    ultimoErrorAuth = null;
     setLoading(true);
     setMessage(
       action === "signup"
@@ -523,7 +748,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
       } else if (ok) {
         setMessage("Te enviamos un correo para recuperar tu contrasena.", "success");
       } else {
-        setMessage("Revisa los datos e intentalo nuevamente.", "error");
+        setMessage(ultimoErrorAuth || "Revisa los datos e intentalo nuevamente.", "error");
       }
     } finally {
       setLoading(false);
@@ -563,6 +788,7 @@ export default {
   haySesionActiva,
   obtenerUsuarioActual,
   actualizarPerfil,
+  renderizarPerfil,
   renderizarPanelAuth,
 
 };

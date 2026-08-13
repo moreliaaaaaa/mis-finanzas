@@ -4,7 +4,7 @@
  * Copiado automáticamente a dist/ por Vite desde public/
  */
 
-const CACHE_NAME = "misfinanzas-v2";
+const CACHE_NAME = "misfinanzas-v3";
 const PRECACHE_URLS = [
   "/",
   "/index.html",

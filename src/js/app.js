@@ -24,6 +24,8 @@ import { limpiarStorage, obtenerDelStorage, guardarEnStorage } from "./storage.j
 import {
   inicializarSupabase,
   obtenerTransaccionesSupabase,
+  sincronizarPendientes,
+  esSupabaseConectado,
 } from "./supabase.js";
 import { MENSAJES } from "./constants.js";
 import { recalcularYRenderizar } from "./modules/dashboard.js";
@@ -64,7 +66,7 @@ import {
   renderizarPresupuesto,
   verificarAlertasPresupuesto,
 } from "./modules/budgets.js";
-import { inicializarAuth, renderizarPanelAuth, haySesionActiva, cerrarSesion } from "./modules/auth.js";
+import { inicializarAuth, renderizarPanelAuth, renderizarPerfil, haySesionActiva, cerrarSesion } from "./modules/auth.js";
 import { registrarServiceWorker, configurarInstalacion } from "./pwa.js";
 
 async function cargarTemplate(ruta, destinoId) {
@@ -127,6 +129,7 @@ export async function initApp() {
 
     // Renderizar panel normal de autenticación
     await renderizarPanelAuth("auth-panel");
+    renderizarPerfil();
 
     // 1.2 Mostrar login/registro como pantalla inicial
     if (!haySesionActiva()) {
@@ -211,6 +214,9 @@ export async function initApp() {
       } else {
         cargarMovimientosDePrueba();
       }
+
+      // Subir movimientos que quedaron sin sincronizar
+      sincronizarPendientes();
     } else {
       mostrarToast("info", MENSAJES.info.modoLocal);
       cargarMovimientosDePrueba();
@@ -344,6 +350,9 @@ function setupEventListeners() {
   // Detectar conexión/desconexión
   window.addEventListener("online", () => {
     mostrarToast("success", "Conectado a internet 🌐");
+    if (esSupabaseConectado()) {
+      sincronizarPendientes();
+    }
   });
 
   window.addEventListener("offline", () => {
@@ -434,6 +443,7 @@ function setupProfileOptions() {
 
     logoutBtn?.addEventListener("click", async () => {
         cerrarSesion();
+        renderizarPerfil();
         await renderizarPanelAuth("auth-panel");
         mostrarLoginScreen();
     });
