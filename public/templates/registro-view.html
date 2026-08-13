@@ -1,0 +1,109 @@
+<div id="vista-registro" data-vista="registro" class="hidden">
+  <div class="main-layout">
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <img
+            class="asset-icon panel-title-icon"
+            src="/src/assets/icons/addition.svg"
+            alt=""
+          />
+          <span>Registrar Movimiento</span>
+        </div>
+      </div>
+      <form id="form-movimiento">
+        <input type="hidden" id="edit-id" />
+        <div class="form-group">
+          <span id="tipo-label" class="label">Tipo de movimiento</span>
+          <input type="hidden" id="tipo" name="tipo" value="ingreso" />
+          <div
+            class="btn-toggle-group"
+            role="radiogroup"
+            aria-labelledby="tipo-label"
+          >
+            <button
+              type="button"
+              id="btn-tipo-ingreso"
+              class="btn-toggle ingreso"
+              role="radio"
+              aria-checked="true"
+            >
+              <img
+                class="asset-icon"
+                src="/src/assets/icons/trending_up.svg"
+                alt=""
+              />
+              <span class="btn-toggle-content">
+                <strong>Ingreso</strong>
+                <small>Dinero que recibes</small>
+              </span>
+            </button>
+            <button
+              type="button"
+              id="btn-tipo-egreso"
+              class="btn-toggle egreso"
+              role="radio"
+              aria-checked="false"
+            >
+              <img
+                class="asset-icon"
+                src="/src/assets/icons/trending_down.svg"
+                alt=""
+              />
+              <span class="btn-toggle-content">
+                <strong>Egreso</strong>
+                <small>Dinero que gastas</small>
+              </span>
+            </button>
+          </div>
+          <p id="tipo-ayuda" class="tipo-ayuda">
+            Elige si el dinero entra o sale de tu balance.
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="categoria" class="label">Categoría</label>
+          <select id="categoria" name="categoria" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="monto" class="label">Monto</label>
+            <input
+              type="number"
+              id="monto"
+              name="monto"
+              min="1"
+              step="any"
+              placeholder="Ej. 15000"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="fecha" class="label">Fecha</label>
+            <input type="date" id="fecha" name="fecha" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="detalle" class="label">Detalle / Nota corta</label>
+          <input
+            type="text"
+            id="detalle"
+            name="detalle"
+            placeholder="Opcional"
+          />
+        </div>
+        <div class="form-buttons">
+          <button type="submit" id="btn-submit" class="btn-primary">
+            <span class="submit-label">Guardar ingreso</span>
+          </button>
+          <button
+            type="button"
+            id="btn-cancelar"
+            class="btn-secondary is-hidden"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>

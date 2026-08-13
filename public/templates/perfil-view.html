@@ -1,0 +1,94 @@
+<div id="vista-perfil" data-vista="perfil" class="hidden">
+  <section class="page-header">
+    <div class="page-header-content">
+      <button
+        type="button"
+        class="btn-back"
+        onclick="window.cambiarVista('home')"
+      >
+        <img class="asset-icon" src="/src/assets/icons/return.svg" alt="" />
+        Volver al panel
+      </button>
+      <h1 class="section-title">Perfil</h1>
+      <p class="section-subtitle">
+        Configura tu cuenta y tus preferencias personales.
+      </p>
+    </div>
+  </section>
+
+  <div class="main-layout">
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <img
+            class="asset-icon panel-title-icon"
+            src="/src/assets/icons/people_avatar.svg"
+            alt=""
+          />
+          <span>Mi cuenta</span>
+        </div>
+      </div>
+
+      <div class="profile-card-summary">
+        <div class="profile-avatar-badge">MF</div>
+        <div>
+          <h3>Mi perfil</h3>
+          <p>Usuario de Morelia Finanzas</p>
+        </div>
+      </div>
+
+      <div class="profile-options">
+        <div class="profile-option-row">
+          <span>Iniciar limpio</span>
+          <button
+            type="button"
+            id="profile-reset-data-btn"
+            class="btn-secondary"
+          >
+            Borrar todo
+          </button>
+        </div>
+
+        <div class="profile-option-row">
+          <span>Modo oscuro</span>
+          <button type="button" id="profile-theme-toggle" class="btn-secondary">
+            Activar
+          </button>
+        </div>
+
+        <div class="profile-option-row">
+          <span>Mi información</span>
+          <button type="button" class="btn-secondary" disabled>Editar</button>
+        </div>
+
+        <div class="profile-option-row">
+          <span>Seguridad</span>
+          <button type="button" class="btn-secondary" disabled>Cambiar</button>
+        </div>
+
+        <div class="profile-option-row">
+          <span>Notificaciones</span>
+          <button type="button" class="btn-secondary" disabled>
+            Configurar
+          </button>
+        </div>
+
+        <div class="profile-option-row">
+          <span>Sincronización</span>
+          <button type="button" class="btn-secondary" disabled>
+            Configurar
+          </button>
+        </div>
+
+        <div class="profile-option-row">
+          <span>Preferencias</span>
+          <button type="button" class="btn-secondary" disabled>Ver más</button>
+        </div>
+
+        <button type="button" id="profile-logout-btn" class="btn-primary">
+          Cerrar sesión
+        </button>
+      </div>
+    </section>
+  </div>
+</div>

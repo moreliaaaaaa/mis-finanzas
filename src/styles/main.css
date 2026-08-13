@@ -1,0 +1,15 @@
+/* ==========================================================================
+   IMPORTACIÓN DE MÓDULOS DE ESTILO
+   ========================================================================== */
+@import "./variables.css";
+@import "./base.css";
+@import "./utilities.css";
+@import "./components.css";
+@import "./animations.css";
+@import "./forms.css";
+@import "./auth.css";
+@import "./dashboard.css";
+@import "./charts.css";
+@import "./toast.css";
+@import "./periods.css";
+@import "./responsive.css";

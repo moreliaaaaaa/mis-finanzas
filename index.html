@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Control inteligente de finanzas, ingresos y gastos del taller de costura">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mis Finanzas">
+  <title>Morelia Finanzas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+  <div id="app-shell">
+    <div id="header-placeholder"></div>
+    <div id="auth-panel" class="hidden"></div>
+
+    <main>
+      <div id="toast-container"></div>
+      <button type="button" id="btn-instalar-pwa" class="pwa-install-btn hidden" aria-label="Instalar aplicación">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12"></path>
+          <path d="m8 11 4 4 4-4"></path>
+          <path d="M4 21h16"></path>
+        </svg>
+        <span>Instalar app</span>
+      </button>
+
+      <div id="home-view-placeholder"></div>
+      <div id="historial-view-placeholder"></div>
+      <div id="presupuesto-view-placeholder"></div>
+      <div id="registro-view-placeholder"></div>
+      <div id="ultimos-view-placeholder"></div>
+      <div id="egresos-view-placeholder"></div>
+      <div id="perfil-view-placeholder"></div>
+      <div id="footer-placeholder"></div>
+    </main>
+
+  </div>
+
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>

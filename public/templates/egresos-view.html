@@ -1,0 +1,89 @@
+<div id="vista-egresos" data-vista="egresos" class="hidden">
+  <section class="page-header">
+    <div class="page-header-content">
+      <button
+        type="button"
+        class="btn-back"
+        onclick="window.cambiarVista('home')"
+      >
+        <img class="asset-icon" src="/src/assets/icons/return.svg" alt="" />
+        Volver al Panel
+      </button>
+      <h1 class="section-title">Distribución Detallada de Egresos</h1>
+      <p class="section-subtitle">
+        Análisis porcentual por categorías e historial consolidado.
+      </p>
+    </div>
+  </section>
+  <div class="expenses-layout">
+    <section class="chart-container">
+      <h3 class="chart-title">Distribución Visual de Egresos</h3>
+      <canvas id="chart-egresos-container" class="chart-canvas"></canvas>
+      <div id="chart-fallback" class="chart-empty">
+        <div class="chart-empty-icon">📊</div>
+        <div class="chart-empty-text">
+          Registra egresos para ver el análisis gráfico.
+        </div>
+      </div>
+    </section>
+    <section class="chart-container">
+      <h3 class="chart-title">Tendencia Mensual (Ingresos vs Egresos)</h3>
+      <div class="chart-wrapper">
+        <canvas id="chart-tendencia" class="chart-canvas"></canvas>
+      </div>
+      <div id="chart-tendencia-fallback" class="chart-empty">
+        <div class="chart-empty-icon">📈</div>
+        <div class="chart-empty-text">
+          Registra movimientos en al menos un mes para ver la tendencia.
+        </div>
+      </div>
+    </section>
+    <section class="chart-container">
+      <h3 class="chart-title">Comparativa de Balance Mensual</h3>
+      <div class="chart-wrapper">
+        <canvas id="chart-comparativa" class="chart-canvas"></canvas>
+      </div>
+      <div id="chart-comparativa-fallback" class="chart-empty">
+        <div class="chart-empty-icon">📊</div>
+        <div class="chart-empty-text">
+          Necesitas datos de al menos 2 meses para la comparativa.
+        </div>
+      </div>
+    </section>
+    <section class="expense-details">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon panel-icon-home">
+              <i data-lucide="home"></i>
+            </div>
+            <span>Hogar y Servicios Básicos</span>
+          </div>
+        </div>
+        <div id="lista-detalles-hogar" class="detail-list"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon panel-icon-workshop">
+              <i data-lucide="scissors"></i>
+            </div>
+            <span>Taller de Costura</span>
+          </div>
+        </div>
+        <div id="lista-detalles-taller" class="detail-list"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon panel-icon-family">
+              <i data-lucide="users"></i>
+            </div>
+            <span>Familia y Niños</span>
+          </div>
+        </div>
+        <div id="lista-detalles-familia" class="detail-list"></div>
+      </section>
+    </section>
+  </div>
+</div>

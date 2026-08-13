@@ -1,0 +1,125 @@
+<div id="vista-ultimos" data-vista="ultimos" class="hidden">
+  <section class="panel history-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <img
+          class="asset-icon panel-title-icon"
+          src="/src/assets/icons/list.svg"
+          alt=""
+        />
+        <span>Últimos Movimientos</span>
+      </div>
+      <div class="panel-actions">
+        <button type="button" class="btn-export" onclick="window.exportarCSV()">
+          <img
+            class="asset-icon"
+            src="/src/assets/icons/file_export.svg"
+            alt=""
+          />
+          Exportar CSV
+        </button>
+        <button type="button" class="btn-export" onclick="window.exportarPDF()">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            ></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Exportar PDF
+        </button>
+      </div>
+    </div>
+    <div class="filters-container">
+      <div class="search-box">
+        <svg
+          class="search-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          id="busqueda-movimientos"
+          class="search-input"
+          placeholder="Buscar por detalle, categoría o fecha..."
+        />
+      </div>
+      <div class="date-filters">
+        <div class="date-filter-group">
+          <label for="filtro-fecha-inicio" class="date-label">Desde:</label>
+          <input type="date" id="filtro-fecha-inicio" class="date-input" />
+        </div>
+        <div class="date-filter-group">
+          <label for="filtro-fecha-fin" class="date-label">Hasta:</label>
+          <input type="date" id="filtro-fecha-fin" class="date-input" />
+        </div>
+        <button
+          type="button"
+          id="btn-limpiar-filtros"
+          class="btn-clear-filters"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Limpiar
+        </button>
+      </div>
+    </div>
+    <div class="history-filters">
+      <span class="filter-label">Tipo:</span>
+      <button
+        id="filtro-todos"
+        class="filter-button active"
+        onclick="window.filtrarHistorial('todos')"
+      >
+        Todos
+      </button>
+      <button
+        id="filtro-ingreso"
+        class="filter-button"
+        onclick="window.filtrarHistorial('ingreso')"
+      >
+        Ingresos
+      </button>
+      <button
+        id="filtro-egreso"
+        class="filter-button"
+        onclick="window.filtrarHistorial('egreso')"
+      >
+        Egresos
+      </button>
+    </div>
+    <div id="lista-movimientos-dashboard" class="history-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <img class="asset-icon" src="/src/assets/icons/note_add.svg" alt="" />
+        </div>
+        <div class="empty-state-text">No hay registros cargados aún.</div>
+      </div>
+    </div>
+  </section>
+</div>

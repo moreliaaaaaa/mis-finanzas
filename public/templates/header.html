@@ -1,0 +1,137 @@
+<header>
+  <div class="navbar-container">
+    <div class="navbar-actions">
+      <div class="nav-dropdown">
+        <button
+          id="nav-menu-btn"
+          class="btn-icon menu-button"
+          title="Abrir menú"
+          aria-expanded="false"
+          aria-controls="nav-menu"
+        >
+          <img
+            class="asset-icon"
+            src="/src/assets/icons/menu_hamburge.svg"
+            alt=""
+          />
+        </button>
+      </div>
+    </div>
+
+    <div class="navbar-brand">
+      <div class="navbar-brand-identity">
+        <img
+          class="navbar-logo-brand"
+          src="/src/assets/marca/logo-morelia.svg"
+          alt="Morelia Finanzas"
+        />
+        <span class="navbar-brand-wordmark">Finanzas</span>
+      </div>
+      <div class="navbar-brand-text">
+        <p>Control de ingresos, hogar y taller de costura</p>
+      </div>
+    </div>
+    <button
+      id="global-back-btn"
+      type="button"
+      class="btn-back-fixed hidden"
+      onclick="window.irAHome()"
+      aria-label="Volver al inicio"
+      title="Volver al inicio"
+    >
+      <img class="asset-icon" src="/src/assets/icons/return.svg" alt="Volver" />
+    </button>
+  </div>
+</header>
+<div id="nav-backdrop" class="nav-backdrop" hidden></div>
+<aside
+  id="nav-menu"
+  class="dropdown-menu"
+  aria-hidden="true"
+  aria-label="Menú principal"
+>
+  <div class="dropdown-header">
+    <button
+      type="button"
+      class="dropdown-close"
+      aria-label="Cerrar menú"
+      title="Cerrar menú"
+    >
+      <i data-lucide="x"></i>
+    </button>
+  </div>
+  <div class="dropdown-links">
+    <button
+      type="button"
+      class="dropdown-item active"
+      data-nav-view="home"
+      aria-current="page"
+      onclick="window.irAHome()"
+    >
+      <i data-lucide="home"></i>
+      <span>Inicio</span>
+    </button>
+    <button
+      type="button"
+      class="dropdown-item"
+      data-nav-view="registro"
+      onclick="window.irARegistro()"
+    >
+      <img class="asset-icon" src="/src/assets/icons/note_add.svg" alt="" />
+      <span>Registro de movimiento</span>
+    </button>
+    <button
+      type="button"
+      class="dropdown-item"
+      data-nav-view="ultimos"
+      onclick="window.irAUltimos()"
+    >
+      <img class="asset-icon" src="/src/assets/icons/list.svg" alt="" />
+      <span>Últimos movimientos</span>
+    </button>
+    <button
+      type="button"
+      class="dropdown-item"
+      data-nav-view="egresos"
+      onclick="window.irAEgresos()"
+    >
+      <img class="asset-icon" src="/src/assets/icons/timeline.svg" alt="" />
+      <span>Distribución de egresos</span>
+    </button>
+    <button
+      type="button"
+      class="dropdown-item"
+      data-nav-view="historial-periodos"
+      onclick="window.irAHistorialPeriodos()"
+    >
+      <img
+        class="asset-icon"
+        src="/src/assets/icons/calendar_month.svg"
+        alt=""
+      />
+      <span>Historial de periodos</span>
+    </button>
+    <button
+      type="button"
+      class="dropdown-item"
+      data-nav-view="presupuesto"
+      onclick="window.irAPresupuesto()"
+    >
+      <img class="asset-icon" src="/src/assets/icons/balance.svg" alt="" />
+      <span>Presupuesto</span>
+    </button>
+    <button
+      type="button"
+      class="dropdown-item"
+      data-nav-view="perfil"
+      onclick="window.irAPerfil()"
+    >
+      <img
+        class="asset-icon"
+        src="/src/assets/icons/people_avatar.svg"
+        alt=""
+      />
+      <span>Perfil</span>
+    </button>
+  </div>
+</aside>

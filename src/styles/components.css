@@ -1,0 +1,876 @@
+/* ==========================================================================
+   MORELIA — COMPONENTES Y UI
+   Estilo: elegante / moderno / premium
+   ========================================================================== */
+
+
+/* ==========================================================================
+   MENÚ LATERAL
+   ========================================================================== */
+
+.nav-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+
+/* Fondo detrás del menú */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(15, 23, 42, 0.42);
+
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+
+  z-index: 999;
+}
+
+.nav-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+
+/* ==========================================================================
+   PANEL LATERAL
+   ========================================================================== */
+
+.dropdown-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: min(88vw, 350px);
+  height: 100vh;
+  height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 1.15rem 0 1.5rem;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(248, 250, 252, 0.98) 100%
+    );
+
+  color: var(--texto-principal);
+
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-left: none;
+  border-radius: 0 26px 26px 0;
+
+  box-shadow:
+    15px 0 45px rgba(15, 23, 42, 0.16),
+    4px 0 12px rgba(15, 23, 42, 0.06);
+
+  overflow-y: auto;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transform: translateX(-105%);
+
+  transition:
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.25s ease,
+    visibility 0.38s ease;
+
+  z-index: 1000;
+}
+
+
+.dropdown-menu.open,
+.dropdown-menu[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+
+/* Scrollbar */
+.dropdown-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 999px;
+}
+
+
+/* ==========================================================================
+   CABECERA
+   ========================================================================== */
+
+.dropdown-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+
+  padding: 0 1.25rem 1.35rem;
+
+  margin-bottom: 0.35rem;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+
+/* Botón cerrar */
+
+.dropdown-close {
+  align-self: flex-end;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.25rem;
+  height: 2.25rem;
+
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 12px;
+
+  background: rgba(241, 245, 249, 0.7);
+
+  color: #64748b;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dropdown-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.3);
+  transform: rotate(3deg);
+}
+
+.dropdown-close:active {
+  transform: scale(0.94);
+}
+
+
+/* ==========================================================================
+   PERFIL
+   ========================================================================== */
+
+.dropdown-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+
+  padding: 0.75rem;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.95),
+      rgba(241, 245, 249, 0.7)
+    );
+
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+
+/* Avatar */
+
+.dropdown-avatar {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  width: 3rem;
+  height: 3rem;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand),
+      var(--color-brand-hover)
+    );
+
+  color: white;
+
+  box-shadow:
+    0 7px 18px rgba(2, 132, 199, 0.25);
+}
+
+
+.dropdown-avatar::after {
+  content: "";
+
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  border: 2px solid white;
+}
+
+
+.dropdown-avatar svg,
+.dropdown-avatar .asset-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+
+/* Información del usuario */
+
+.dropdown-user {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.2rem;
+
+  min-width: 0;
+}
+
+.dropdown-user strong {
+  color: #0f172a;
+
+  font-size: 0.92rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-user span {
+  color: #64748b;
+
+  font-size: 0.73rem;
+  font-weight: 500;
+}
+
+
+/* ==========================================================================
+   ENLACES
+   ========================================================================== */
+
+.dropdown-links {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.3rem;
+
+  padding: 0.8rem 0.75rem;
+}
+
+
+/* Elemento */
+
+.dropdown-item {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 0.85rem;
+
+  width: 100%;
+
+  min-height: 48px;
+
+  padding: 0.75rem 1rem;
+
+  border: 1px solid transparent;
+  border-radius: 14px;
+
+  background: transparent;
+
+  color: #475569;
+
+  font-size: 0.84rem;
+  font-weight: 550;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* Iconos */
+
+.dropdown-item i,
+.dropdown-item svg,
+.dropdown-item .asset-icon {
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
+
+  color: #64748b;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+/* Hover */
+
+.dropdown-item:hover {
+  background: rgba(226, 232, 240, 0.58);
+
+  color: #0f172a;
+
+  border-color: rgba(148, 163, 184, 0.12);
+
+  transform: translateX(3px);
+}
+
+.dropdown-item:hover i,
+.dropdown-item:hover svg,
+.dropdown-item:hover .asset-icon {
+  color: var(--color-brand);
+
+  transform: scale(1.08);
+}
+
+
+/* Elemento activo */
+
+.dropdown-item.active,
+.dropdown-item[aria-current="page"] {
+  position: relative;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(2, 132, 199, 0.12),
+      rgba(14, 165, 233, 0.06)
+    );
+
+  color: var(--color-brand);
+
+  font-weight: 700;
+
+  border: 1px solid rgba(2, 132, 199, 0.12);
+
+  box-shadow:
+    0 4px 12px rgba(2, 132, 199, 0.06);
+
+  padding-left: 1rem;
+}
+
+
+/* Indicador lateral */
+
+.dropdown-item.active::before,
+.dropdown-item[aria-current="page"]::before {
+  content: "";
+
+  position: absolute;
+
+  left: -1px;
+  top: 50%;
+
+  width: 4px;
+  height: 24px;
+
+  border-radius: 0 5px 5px 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-brand),
+      var(--color-brand-hover)
+    );
+
+  transform: translateY(-50%);
+}
+
+
+/* Icono activo */
+
+.dropdown-item.active i,
+.dropdown-item.active svg,
+.dropdown-item.active .asset-icon,
+.dropdown-item[aria-current="page"] i,
+.dropdown-item[aria-current="page"] svg,
+.dropdown-item[aria-current="page"] .asset-icon {
+  color: var(--color-brand);
+}
+
+
+/* Click */
+
+.dropdown-item:active {
+  transform: scale(0.98);
+}
+
+
+/* Accesibilidad */
+
+.dropdown-item:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px rgba(14, 165, 233, 0.18);
+}
+
+
+/* ==========================================================================
+   TEMA OSCURO
+   ========================================================================== */
+
+html.dark .nav-backdrop {
+  background: rgba(2, 6, 23, 0.65);
+}
+
+
+html.dark .dropdown-menu {
+  background:
+    linear-gradient(
+      180deg,
+      #111827 0%,
+      #0f172a 100%
+    );
+
+  color: var(--texto-principal);
+
+  border-color: rgba(255, 255, 255, 0.06);
+
+  box-shadow:
+    15px 0 45px rgba(0, 0, 0, 0.5),
+    4px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+
+html.dark .dropdown-header {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+
+html.dark .dropdown-close {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+}
+
+
+html.dark .dropdown-close:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #f8fafc;
+}
+
+
+html.dark .dropdown-profile {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(30, 41, 59, 0.9),
+      rgba(15, 23, 42, 0.8)
+    );
+
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+
+html.dark .dropdown-user strong {
+  color: #f8fafc;
+}
+
+
+html.dark .dropdown-user span {
+  color: #94a3b8;
+}
+
+
+html.dark .dropdown-item {
+  color: #cbd5e1;
+}
+
+
+html.dark .dropdown-item i,
+html.dark .dropdown-item svg,
+html.dark .dropdown-item .asset-icon {
+  color: #94a3b8;
+}
+
+
+html.dark .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.055);
+
+  color: #f8fafc;
+}
+
+
+html.dark .dropdown-item.active,
+html.dark .dropdown-item[aria-current="page"] {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.16),
+      rgba(2, 132, 199, 0.08)
+    );
+
+  color: #7dd3fc;
+
+  border-color: rgba(56, 189, 248, 0.12);
+}
+
+
+html.dark .dropdown-item.active i,
+html.dark .dropdown-item.active svg,
+html.dark .dropdown-item.active .asset-icon,
+html.dark .dropdown-item[aria-current="page"] i,
+html.dark .dropdown-item[aria-current="page"] svg,
+html.dark .dropdown-item[aria-current="page"] .asset-icon {
+  color: #38bdf8;
+}
+
+
+html.dark .dropdown-avatar::after {
+  border-color: #111827;
+}
+
+
+/* ==========================================================================
+   BOTÓN INSTALAR PWA
+   ========================================================================== */
+
+.pwa-install-btn {
+  position: fixed;
+
+  right: 1.25rem;
+  bottom: 1.25rem;
+
+  z-index: 9000;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.55rem;
+
+  min-height: 46px;
+
+  padding: 0.75rem 1.15rem;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand),
+      var(--color-brand-hover)
+    );
+
+  color: white;
+
+  font-weight: 700;
+  font-size: 0.82rem;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+
+  border-radius: 14px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 25px rgba(2, 132, 199, 0.28);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+
+.pwa-install-btn:hover {
+  transform: translateY(-3px);
+
+  filter: brightness(1.05);
+
+  box-shadow:
+    0 14px 32px rgba(2, 132, 199, 0.38);
+}
+
+
+.pwa-install-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+
+.pwa-install-btn.hidden {
+  display: none;
+}
+
+
+/* ==========================================================================
+   CAMBIAR TEMA
+   ========================================================================== */
+
+#theme-toggle {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.5rem;
+  height: 2.5rem;
+
+  border-radius: 12px;
+
+  border: 1px solid rgba(148, 163, 184, 0.2);
+
+  background:
+    rgba(255, 255, 255, 0.75);
+
+  color: #475569;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 10px rgba(15, 23, 42, 0.05);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+#theme-toggle:hover {
+  background: #f1f5f9;
+
+  color: var(--color-brand);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 15px rgba(15, 23, 42, 0.08);
+}
+
+
+#theme-toggle:active {
+  transform: scale(0.95);
+}
+
+
+#theme-toggle .icon-theme-light,
+#theme-toggle .icon-theme-dark {
+  position: absolute;
+
+  inset: 0;
+
+  margin: auto;
+
+  width: 1.1rem;
+  height: 1.1rem;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+
+html:not(.dark) #theme-toggle .icon-theme-dark {
+  opacity: 0;
+
+  transform: rotate(-45deg) scale(0.6);
+}
+
+
+html.dark #theme-toggle .icon-theme-light {
+  opacity: 0;
+
+  transform: rotate(45deg) scale(0.6);
+}
+
+
+html.dark #theme-toggle {
+  background: rgba(30, 41, 59, 0.8);
+
+  border-color: rgba(255, 255, 255, 0.08);
+
+  color: #cbd5e1;
+}
+
+
+html.dark #theme-toggle:hover {
+  background: rgba(51, 65, 85, 0.9);
+
+  color: #7dd3fc;
+}
+
+
+/* ==========================================================================
+   BOTÓN MENÚ
+   ========================================================================== */
+
+.menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.5rem;
+  height: 2.5rem;
+
+  border: 1px solid rgba(148, 163, 184, 0.2);
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f8fafc,
+      #e2e8f0
+    );
+
+  color: #334155;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.menu-button:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand),
+      var(--color-brand-hover)
+    );
+
+  color: white;
+
+  transform: translateY(-2px);
+
+  border-color: transparent;
+
+  box-shadow:
+    0 8px 20px rgba(2, 132, 199, 0.28);
+}
+
+
+.menu-button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+
+.menu-button .asset-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+
+/* ==========================================================================
+   ANIMACIONES
+   ========================================================================== */
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease both;
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 640px) {
+
+  .dropdown-menu {
+    width: min(88vw, 350px);
+    border-radius: 0 22px 22px 0;
+  }
+
+  .dropdown-item {
+    min-height: 50px;
+    padding: 0.8rem 1rem;
+  }
+
+  .dropdown-links {
+    padding: 0.75rem 0.65rem;
+  }
+
+  .pwa-install-btn {
+    right: 1rem;
+    bottom: 1rem;
+
+    min-height: 44px;
+
+    padding:
+      0.7rem 0.95rem;
+  }
+}
+
+
+@media (min-width: 641px) {
+
+  .dropdown-menu {
+    width: 350px;
+  }
+}

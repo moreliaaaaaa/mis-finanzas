@@ -1,0 +1,407 @@
+/* ==========================================================================
+   UTILIDADES DE LAYOUT, SPACING Y BOTONES
+   ========================================================================== */
+
+/* Utilidades de texto */
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.uppercase { text-transform: uppercase; }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Utilidades de espaciado */
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.space-y-3 > * + * { margin-top: 0.75rem; }
+.space-y-4 > * + * { margin-top: 1rem; }
+.space-y-6 > * + * { margin-top: 1.5rem; }
+.space-y-8 > * + * { margin-top: 2rem; }
+
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-5 { gap: 1.25rem; }
+.gap-6 { gap: 1.5rem; }
+.gap-8 { gap: 2rem; }
+
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 0.75rem; }
+.p-4 { padding: 1rem; }
+.p-5 { padding: 1.25rem; }
+.p-6 { padding: 1.5rem; }
+
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+
+.py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+
+.m-0 { margin: 0; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+
+/* Utilidades de flexbox */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.justify-center { justify-content: center; }
+
+/* Utilidades de grid */
+.grid { display: grid; }
+.gap-row-2 { row-gap: 0.5rem; }
+
+/* Utilidades de ancho */
+.w-full { width: 100%; }
+.w-auto { width: auto; }
+.max-w-7xl { max-width: 80rem; }
+
+/* Utilidades de altura */
+.h-full { height: 100%; }
+.h-auto { height: auto; }
+.min-h-full { min-height: 100%; }
+
+/* Utilidades de border */
+.border { border: 1px solid var(--borde-color); }
+.border-b { border-bottom: 1px solid var(--borde-color); }
+.border-t { border-top: 1px solid var(--borde-color); }
+.border-l { border-left: 1px solid var(--borde-color); }
+.border-r { border-right: 1px solid var(--borde-color); }
+
+.rounded { border-radius: 0.375rem; }
+.rounded-lg { border-radius: 0.5rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-2xl { border-radius: 1rem; }
+.rounded-full { border-radius: 9999px; }
+
+/* Utilidad para esconder elementos */
+.is-hidden { display: none !important; }
+
+/* Layout principal entre formulario y paneles secundarios */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* Filas del formulario */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Botones del formulario (alineación) */
+.form-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .form-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Lista de detalles en paneles */
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Layout de la vista de egresos */
+.expenses-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .expenses-layout {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+/* Botón volver */
+.btn-back {
+  background-color: transparent;
+  border: 1px solid var(--borde-color);
+  color: var(--texto-principal);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-back:hover {
+  background-color: var(--bg-tarjeta);
+  border-color: var(--color-brand);
+}
+
+.btn-back-fixed {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 60;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(100, 116, 139, 0.18);
+  background-color: rgba(255, 255, 255, 0.92);
+  color: var(--texto-principal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-back-fixed:hover {
+  transform: translateY(-1px);
+  background-color: var(--bg-tarjeta);
+  border-color: var(--color-brand);
+}
+
+.btn-back-fixed .asset-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Páginas ocultas/visibles en la app SPA */
+.page { display: block; }
+.page-hidden { display: none !important; }
+
+/* Controles de filtros en historial */
+.history-filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: var(--texto-atenuado);
+}
+
+/* Íconos en encabezados de paneles con color por tipo */
+.panel-icon-home {
+  background-color: var(--cat-arriendo);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.panel-icon-workshop {
+  background-color: var(--cat-hilos);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.panel-icon-family {
+  background-color: var(--cat-ninos);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+/* Utilidades de sombra */
+.shadow-sm { box-shadow: var(--sombra-suave); }
+.shadow-md { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+.shadow-lg { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+
+/* Utilidades de transición */
+.transition { transition: all 0.2s ease; }
+.transition-colors { transition: background-color 0.2s ease, color 0.2s ease; }
+.transition-all { transition: all 0.3s ease; }
+
+.duration-150 { transition-duration: 150ms; }
+.duration-200 { transition-duration: 200ms; }
+.duration-300 { transition-duration: 300ms; }
+
+/* Utilidades de visibilidad */
+.hidden { display: none !important; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+.inline-flex { display: inline-flex; }
+
+.pointer-events-none { pointer-events: none; }
+.pointer-events-auto { pointer-events: auto; }
+
+/* Utilidades de opacidad */
+.opacity-0 { opacity: 0; }
+.opacity-50 { opacity: 0.5; }
+.opacity-100 { opacity: 1; }
+
+/* Utilidades de overflow */
+.overflow-hidden { overflow: hidden; }
+.overflow-y-auto { overflow-y: auto; }
+
+/* Utilidades de posición */
+.fixed { position: fixed; }
+.absolute { position: absolute; }
+.relative { position: relative; }
+.sticky { position: sticky; }
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.bottom-5 { bottom: 1.25rem; }
+.right-5 { right: 1.25rem; }
+.top-0 { top: 0; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+
+/* Utilidades de transformación */
+.translate-y-2 { transform: translateY(0.5rem); }
+.scale-110 { transform: scale(1.1); }
+
+/* Colores semánticos */
+.text-ingreso { color: var(--color-ingreso); }
+.text-egreso { color: var(--color-egreso); }
+
+/* Botón exportar */
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--borde-color);
+  background: var(--bg-principal);
+  color: var(--texto-secundario);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-export:hover {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+  background: var(--color-brand-light);
+}
+
+/* Cabecera de páginas internas */
+.page-header { margin-bottom: 1.5rem; }
+.page-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.expense-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .history-filters {
+    align-items: stretch;
+  }
+
+  .filter-label {
+    width: 100%;
+  }
+
+  .history-filters .filter-button,
+  .panel-actions .btn-export {
+    flex: 1 1 auto;
+  }
+
+  .btn-back {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Links */
+a {
+  color: var(--color-brand);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-brand-hover);
+}
+
+/* Iconos */
+[data-lucide] {
+  display: inline-block;
+  vertical-align: -0.125em;
+}
+
+.asset-icon {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.btn-back .asset-icon,
+.btn-export .asset-icon,
+.btn-icon .asset-icon {
+  width: 1rem;
+  height: 1rem;
+}

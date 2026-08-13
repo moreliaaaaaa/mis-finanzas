@@ -1,0 +1,99 @@
+<div class="auth-panel auth-login-panel">
+  <div class="auth-panel-brand">
+    <img
+      class="auth-panel-logo"
+      src="/src/assets/marca/logo-morelia.svg"
+      alt="Logotipo de Morelia"
+    />
+  </div>
+
+  <p class="auth-copy auth-copy--brand">Crea tu cuenta o inicia sesión.</p>
+
+  <form id="auth-login-form" class="auth-form" novalidate>
+    <label class="auth-field" for="auth-name">
+      <span>Nombre</span>
+      <input
+        type="text"
+        id="auth-name"
+        name="name"
+        placeholder="Tu nombre"
+        autocomplete="name"
+        maxlength="100"
+      />
+    </label>
+
+    <label class="auth-field" for="auth-email">
+      <span>Correo electrónico</span>
+      <input
+        type="email"
+        id="auth-email"
+        name="email"
+        placeholder="tu@email.com"
+        inputmode="email"
+        autocomplete="email"
+        autocapitalize="none"
+        spellcheck="false"
+        required
+      />
+    </label>
+
+    <label class="auth-field" for="auth-country">
+      <span>País</span>
+      <select id="auth-country" name="country"></select>
+    </label>
+
+    <label class="auth-field" for="auth-password">
+      <span>Contraseña</span>
+      <div class="password-wrapper">
+        <input
+          type="password"
+          id="auth-password"
+          name="password"
+          placeholder="••••"
+          autocomplete="current-password"
+          minlength="6"
+          maxlength="128"
+          spellcheck="false"
+          required
+        />
+        <button
+          type="button"
+          class="toggle-password-btn"
+          data-auth-action="toggle-password"
+          aria-label="Mostrar contraseña"
+          aria-pressed="false"
+        >
+          <img
+            src="/src/assets/icons/eye_close.svg"
+            alt=""
+            width="24"
+            height="24"
+          />
+        </button>
+      </div>
+    </label>
+
+    <p class="auth-message" role="status" aria-live="polite"></p>
+
+    <div class="auth-actions">
+      <button
+        type="submit"
+        class="auth-btn auth-btn-primary btn-primary"
+        data-auth-action="login"
+      >
+        Iniciar sesión
+      </button>
+      <button
+        type="button"
+        class="auth-btn auth-btn-secondary btn-secondary"
+        data-auth-action="signup"
+      >
+        Registrarse
+      </button>
+    </div>
+
+    <button type="button" class="auth-recover-btn" data-auth-action="recover">
+      ¿Olvidaste tu contraseña?
+    </button>
+  </form>
+</div>
