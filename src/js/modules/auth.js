@@ -4,8 +4,8 @@
  */
 
 import { getState, setState } from "../state.js";
-import { guardarEnStorage, obtenerDelStorage, eliminarDelStorage } from "../storage.js";
-import { mostrarToast } from "../ui.js";
+import { guardarEnStorage, obtenerDelStorage, eliminarDelStorage, definirAlcanceStorage } from "../storage.js";
+import { mostrarToast, initializarIconos } from "../ui.js";
 import { getSupabaseClient } from "../supabase.js";
 
 const STORAGE_USERS = "misfinanzas_users";
@@ -89,6 +89,7 @@ function guardarSesionAuth(sessionData = {}) {
   };
 
   guardarEnStorage(STORAGE_SESSION, session);
+  definirAlcanceStorage(session.userId);
 
   if (session.userId) {
     const users = obtenerDelStorage(STORAGE_USERS) || {};
@@ -148,12 +149,14 @@ function redimensionarImagen(archivo, maxSize = 256) {
 
 function limpiarSesionAuth() {
   eliminarDelStorage(STORAGE_SESSION);
+  definirAlcanceStorage(null);
   setState({ userId: null, userName: null, userEmail: null });
 }
 
 export function inicializarAuth() {
   const session = obtenerDelStorage(STORAGE_SESSION);
   if (session && session.userId) {
+    definirAlcanceStorage(session.userId);
     setState({
       userId: session.userId,
       userName: session.userName,
@@ -764,6 +767,14 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
       "aria-label",
       isVisible ? "Mostrar contrasena" : "Ocultar contrasena"
     );
+
+    const iconoLucide = togglePasswordBtn.querySelector("[data-lucide]");
+    if (iconoLucide) {
+      iconoLucide.setAttribute("data-lucide", isVisible ? "eye" : "eye-off");
+      initializarIconos();
+      return;
+    }
+
     const icon = togglePasswordBtn.querySelector("img");
     if (icon) {
       icon.src = isVisible ? "/src/assets/icons/eye_close.svg" : "/src/assets/icons/visibility.svg";
@@ -777,6 +788,9 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
 
   signupBtn?.addEventListener("click", () => runAuthAction("signup"));
   recoverBtn?.addEventListener("click", () => runAuthAction("recover"));
+
+  // Procesar iconos Lucide del panel recién renderizado
+  initializarIconos();
 }
 
 export default {

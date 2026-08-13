@@ -20,7 +20,7 @@ import {
   setNavMenuState,
 } from "./ui.js";
 import { setState, getState, subscribe, resetState } from "./state.js";
-import { limpiarStorage, obtenerDelStorage, guardarEnStorage } from "./storage.js";
+import { limpiarStorage, obtenerDelStorage, guardarEnStorage, definirAlcanceStorage } from "./storage.js";
 import {
   inicializarSupabase,
   obtenerTransaccionesSupabase,
@@ -124,6 +124,9 @@ export async function initApp() {
     inicializarAuth();
     const supabaseInit = await inicializarSupabase();
 
+    // Separar el respaldo local por usuario (la sesión pudo restaurarse desde Supabase)
+    definirAlcanceStorage(getState().userId || null);
+
     window.ocultarLoginScreen = ocultarLoginScreen;
     window.mostrarLoginScreen = mostrarLoginScreen;
 
@@ -212,14 +215,15 @@ export async function initApp() {
       } else if (transaccionesNube.length > 0) {
         setState({ transactions: transaccionesNube });
       } else {
-        cargarMovimientosDePrueba();
+        // Nube vacía: cuenta nueva empieza vacía, o se recupera el respaldo local de este usuario
+        cargarMovimientosLocales();
       }
 
       // Subir movimientos que quedaron sin sincronizar
       sincronizarPendientes();
     } else {
       mostrarToast("info", MENSAJES.info.modoLocal);
-      cargarMovimientosDePrueba();
+      cargarMovimientosLocales();
     }
 
     // 11. Re-renderizar tras cargar datos
@@ -464,67 +468,38 @@ function setupStateSubscribers() {
 }
 
 /**
- * Carga datos de prueba (modo offline)
+ * Carga el respaldo local del usuario actual.
+ * Las cuentas nuevas empiezan vacías (sin datos de demostración).
+ * Si la clave por usuario aún no existe, migra el respaldo local antiguo (sin separar).
  */
-function cargarMovimientosDePrueba() {
-  const datosGuardados = obtenerDelStorage("transactions");
+function cargarMovimientosLocales() {
+  const datos = obtenerDelStorage("transactions");
 
-  if (datosGuardados && datosGuardados.length > 0) {
-    setState({ transactions: datosGuardados });
-  } else {
-    // Datos de demostración
-    const transaccionesPrueba = [
-      {
-        id: "1",
-        tipo: "ingreso",
-        categoria: "ingreso_general",
-        monto: 120000,
-        fecha: "2026-06-25",
-        detalle: "Venta de vestidos de fiesta",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        tipo: "egreso",
-        categoria: "hilos_taller",
-        monto: 15000,
-        fecha: "2026-06-26",
-        detalle: "Hilos Overlock de colores",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: "3",
-        tipo: "egreso",
-        categoria: "arriendo",
-        monto: 50000,
-        fecha: "2026-06-15",
-        detalle: "Pago Arriendo Taller",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: "4",
-        tipo: "egreso",
-        categoria: "salidas_familia",
-        monto: 22000,
-        fecha: "2026-06-27",
-        detalle: "Almuerzo familiar fin de semana",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: "5",
-        tipo: "egreso",
-        categoria: "gastos_ninos",
-        monto: 12000,
-        fecha: "2026-06-28",
-        detalle: "Materiales escolares para los niños",
-        timestamp: new Date().toISOString(),
-      },
-    ];
-
-    setState({ transactions: transaccionesPrueba });
-    guardarEnStorage("transactions", transaccionesPrueba);
-    mostrarToast("info", "Datos de demostración cargados");
+  if (Array.isArray(datos)) {
+    setState({ transactions: datos });
+    return;
   }
+
+  // Migración (una sola vez): respaldo local guardado antes de separar por usuario
+  const migrado = localStorage.getItem("misfinanzas_legacy_migrated") === "true";
+  if (!migrado) {
+    try {
+      const legacy = localStorage.getItem("misfinanzas_data_transactions");
+      if (legacy) {
+        const datosLegacy = JSON.parse(legacy);
+        if (Array.isArray(datosLegacy) && datosLegacy.length > 0) {
+          setState({ transactions: datosLegacy });
+          localStorage.setItem("misfinanzas_legacy_migrated", "true");
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn("No se pudo migrar el respaldo local antiguo:", error);
+    }
+    localStorage.setItem("misfinanzas_legacy_migrated", "true");
+  }
+
+  setState({ transactions: [] });
 }
 
 // Exponer funciones globales para HTML

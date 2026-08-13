@@ -6,6 +6,31 @@
 const STORAGE_KEY = "misfinanzas_data";
 const STORAGE_THEME_KEY = "misfinanzas_theme";
 const STORAGE_PERIOD_KEY = "misfinanzas_period";
+
+// Alcance por usuario: los datos se guardan con un sufijo por usuario para que
+// cada cuenta tenga su propio respaldo local en el mismo navegador.
+let alcanceStorage = null;
+
+// Estas claves son globales (no dependen del usuario)
+const CLAVES_GLOBALES = new Set(["misfinanzas_users", "misfinanzas_session"]);
+
+/**
+ * Define el alcance (usuario) para las claves de datos locales.
+ * @param {string|null} userId
+ */
+export function definirAlcanceStorage(userId) {
+  if (!userId) {
+    alcanceStorage = null;
+    return;
+  }
+  alcanceStorage = String(userId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 12);
+}
+
+function sufijoAlcance(key) {
+  if (!alcanceStorage || CLAVES_GLOBALES.has(key)) return "";
+  return `_${alcanceStorage}`;
+}
+
 /**
  * Guarda datos en LocalStorage
  * @param {string} key
@@ -13,7 +38,7 @@ const STORAGE_PERIOD_KEY = "misfinanzas_period";
  */
 export function guardarEnStorage(key, data) {
   try {
-    const fullKey = `${STORAGE_KEY}_${key}`;
+    const fullKey = `${STORAGE_KEY}_${key}${sufijoAlcance(key)}`;
     localStorage.setItem(fullKey, JSON.stringify(data));
     return true;
   } catch (error) {
@@ -29,7 +54,7 @@ export function guardarEnStorage(key, data) {
  */
 export function obtenerDelStorage(key) {
   try {
-    const fullKey = `${STORAGE_KEY}_${key}`;
+    const fullKey = `${STORAGE_KEY}_${key}${sufijoAlcance(key)}`;
     const data = localStorage.getItem(fullKey);
     return data ? JSON.parse(data) : null;
   } catch (error) {
@@ -44,7 +69,7 @@ export function obtenerDelStorage(key) {
  */
 export function eliminarDelStorage(key) {
   try {
-    const fullKey = `${STORAGE_KEY}_${key}`;
+    const fullKey = `${STORAGE_KEY}_${key}${sufijoAlcance(key)}`;
     localStorage.removeItem(fullKey);
     return true;
   } catch (error) {
@@ -164,7 +189,8 @@ export function obtenerTema() {
  */
 export function guardarPeriodoStorage(periodData) {
   try {
-    localStorage.setItem(STORAGE_PERIOD_KEY, JSON.stringify(periodData));
+    const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
+    localStorage.setItem(fullKey, JSON.stringify(periodData));
     return true;
   } catch (error) {
     console.error("Error guardando periodo:", error);
@@ -178,7 +204,8 @@ export function guardarPeriodoStorage(periodData) {
  */
 export function obtenerPeriodoStorage() {
   try {
-    const data = localStorage.getItem(STORAGE_PERIOD_KEY);
+    const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
+    const data = localStorage.getItem(fullKey);
     return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error("Error leyendo periodo:", error);
@@ -211,6 +238,7 @@ export function descargarBackup(data, filename = "misfinanzas_backup.json") {
 }
 
 export default {
+  definirAlcanceStorage,
   guardarEnStorage,
   obtenerDelStorage,
   eliminarDelStorage,

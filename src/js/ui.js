@@ -5,17 +5,50 @@
 
 import { getState } from "./state.js";
 import { APP_CONFIG } from "./config.js";
-import { createIcons, CloudOff, Sun, Moon, X, Home, Scissors, Users } from "lucide";
+import {
+  createIcons,
+  ArrowLeft,
+  BarChart3,
+  Calendar,
+  Download,
+  Edit,
+  Eye,
+  EyeOff,
+  Home,
+  Inbox,
+  List,
+  Menu,
+  PlusCircle,
+  Scissors,
+  TrendingDown,
+  TrendingUp,
+  User,
+  Users,
+  Wallet,
+  X,
+} from "lucide";
 
 // Iconos usados en la aplicación (importados localmente, sin CDN)
 const icons = {
-  CloudOff,
-  Sun,
-  Moon,
-  X,
+  ArrowLeft,
+  BarChart3,
+  Calendar,
+  Download,
+  Edit,
+  Eye,
+  EyeOff,
   Home,
+  Inbox,
+  List,
+  Menu,
+  PlusCircle,
   Scissors,
+  TrendingDown,
+  TrendingUp,
+  User,
   Users,
+  Wallet,
+  X,
 };
 
 /**
@@ -125,8 +158,8 @@ export function cargarTema() {
  */
 export async function initializarIconos() {
   try {
-    // Crear instancia de createIcons para procesar [data-lucide="..."] en el DOM
-    createIcons();
+    // Procesar todos los [data-lucide="..."] del DOM con el mapa de iconos
+    createIcons({ icons });
   } catch (error) {
     console.warn("Lucide no disponible:", error);
   }
