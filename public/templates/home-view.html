@@ -1,8 +1,36 @@
 <div id="vista-home" data-vista="home">
-  <section class="cards-grid">
+  <!-- Saludo personalizado -->
+  <section class="home-welcome home-anim">
+    <div class="home-welcome-text">
+      <h1 class="home-greeting">
+        Hola.<span id="home-user-name">Usuario</span>
+        <!-- <span class="home-greeting-wave" aria-hidden="true">;D</span> -->
+      </h1>
+      <p class="home-date-line" id="home-date-line">—</p>
+    </div>
+    <div class="home-period-chip" id="home-period-chip" hidden>
+      <i data-lucide="calendar-range"></i>
+      <span id="home-period-text"></span>
+    </div>
+  </section>
+
+  <!-- Hero: balance del periodo -->
+  <section class="balance-hero home-anim" id="card-balance">
+    <span class="balance-hero-eyebrow" id="home-period-range">Balance del periodo</span>
+    <div class="balance-hero-row">
+      <h3 id="resumen-balance" class="balance-hero-amount">$0.00</h3>
+      <div class="balance-hero-badge" id="balance-hero-badge" hidden>
+        <i data-lucide="trending-up"></i>
+        <span id="balance-badge-text"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resumen de ingresos y gastos -->
+  <section class="cards-grid home-cards-grid home-anim">
     <article class="card ingresos">
       <div class="card-content">
-        <p class="card-label">Ingresos Totales</p>
+        <p class="card-label">Ingresos del periodo</p>
         <h3 id="resumen-ingresos" class="card-amount">$0.00</h3>
       </div>
       <div class="card-icon">
@@ -11,21 +39,34 @@
     </article>
     <article class="card egresos">
       <div class="card-content">
-        <p class="card-label">Gastos Totales</p>
+        <p class="card-label">Gastos del periodo</p>
         <h3 id="resumen-egresos" class="card-amount">$0.00</h3>
       </div>
       <div class="card-icon">
         <i data-lucide="trending-down"></i>
       </div>
     </article>
-    <article id="card-balance" class="card balance">
+    <article id="card-balance-neto" class="card balance">
       <div class="card-content">
         <p class="card-label">Balance Neto</p>
-        <h3 id="resumen-balance" class="card-amount">$0.00</h3>
+        <h3 id="resumen-balance-neto" class="card-amount">$0.00</h3>
       </div>
-      <div id="badge-balance" class="card-icon">
+      <div class="card-icon">
         <i data-lucide="wallet"></i>
       </div>
     </article>
   </section>
+
+  <!-- Últimos movimientos
+  <section class="home-section home-anim" id="home-ultimos" hidden>
+    <header class="home-section-header">
+      <h2 class="home-section-title">Últimos movimientos</h2>
+      <button type="button" class="home-section-link" onclick="window.irAUltimos()">
+        Ver todos
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </header>
+    <div class="home-mov-list" id="ultimos-movimientos-home"></div>
+  </section>
+  -->
 </div>

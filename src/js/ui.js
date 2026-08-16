@@ -7,19 +7,31 @@ import { getState } from "./state.js";
 import { APP_CONFIG } from "./config.js";
 import {
   createIcons,
+  Activity,
   ArrowLeft,
   BarChart3,
   Calendar,
+  CalendarCheck,
+  CalendarClock,
+  CalendarRange,
+  CreditCard,
+  DollarSign,
   Download,
   Edit,
   Eye,
   EyeOff,
   Home,
   Inbox,
+  LayoutDashboard,
   List,
   Menu,
+  Minus,
+  Pencil,
+  PieChart,
+  PiggyBank,
   PlusCircle,
   Scissors,
+  Trash2,
   TrendingDown,
   TrendingUp,
   User,
@@ -30,19 +42,31 @@ import {
 
 // Iconos usados en la aplicación (importados localmente, sin CDN)
 const icons = {
+  Activity,
   ArrowLeft,
   BarChart3,
   Calendar,
+  CalendarCheck,
+  CalendarClock,
+  CalendarRange,
+  CreditCard,
+  DollarSign,
   Download,
   Edit,
   Eye,
   EyeOff,
   Home,
   Inbox,
+  LayoutDashboard,
   List,
   Menu,
+  Minus,
+  Pencil,
+  PieChart,
+  PiggyBank,
   PlusCircle,
   Scissors,
+  Trash2,
   TrendingDown,
   TrendingUp,
   User,
@@ -207,11 +231,6 @@ export function cambiarVista(vistaId) {
   if (footer) {
     if (vistaId === "perfil") footer.classList.remove("hidden");
     else footer.classList.add("hidden");
-  }
-
-  const backBtn = document.getElementById("global-back-btn");
-  if (backBtn) {
-    backBtn.classList.toggle("hidden", vistaId === "home");
   }
 
   document.querySelectorAll("[data-nav-view]").forEach((item) => {
@@ -396,12 +415,42 @@ export function irAUltimos() {
 /**
  * Navegación: ir a vista de egresos (distribución)
  */
+/**
+ * Cambia la seccion visible dentro de la vista de egresos.
+ * @param {string} seccion
+ * @param {{ rerender?: boolean }} opciones
+ */
+export function cambiarSeccionEgresos(seccion = "resumen", opciones = {}) {
+  const secciones = ["resumen", "categorias", "tendencias"];
+  const activa = secciones.includes(seccion) ? seccion : "resumen";
+
+  document.querySelectorAll("[data-expense-panel]").forEach((panel) => {
+    const esActivo = panel.dataset.expensePanel === activa;
+    panel.hidden = !esActivo;
+    panel.classList.toggle("active", esActivo);
+  });
+
+  document.querySelectorAll("[data-expense-section]").forEach((tab) => {
+    const esActivo = tab.dataset.expenseSection === activa;
+    tab.classList.toggle("active", esActivo);
+    tab.setAttribute("aria-selected", String(esActivo));
+  });
+
+  const select = document.getElementById("expense-section-select");
+  if (select) select.value = activa;
+
+  if (opciones.rerender !== false && window.renderizarGraficosEgresos) {
+    setTimeout(() => window.renderizarGraficosEgresos(), 80);
+  }
+}
+
 export function irAEgresos() {
   try {
     cambiarVista("egresos");
     setTimeout(() => {
-      const chart = document.getElementById("chart-egresos-container");
-      if (chart) chart.scrollIntoView({ behavior: "smooth" });
+      cambiarSeccionEgresos("resumen", { rerender: false });
+      const header = document.querySelector("#vista-egresos .expense-page-header");
+      if (header) header.scrollIntoView({ behavior: "smooth", block: "start" });
       setNavMenuState(false);
       // Renderizar gráficos
       if (window.renderizarGraficosEgresos) {

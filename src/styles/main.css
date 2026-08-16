@@ -1,15 +1,43 @@
 /* ==========================================================================
    IMPORTACIÓN DE MÓDULOS DE ESTILO
+   Cada componente tiene su propio archivo CSS
    ========================================================================== */
 @import "./variables.css";
 @import "./base.css";
 @import "./utilities.css";
-@import "./components.css";
+
+/* Menú lateral (drawer) y sus botones */
+@import "./navmenu.css";
+@import "./pwa-install.css";
+@import "./theme-button.css";
+@import "./menu-button.css";
+
 @import "./animations.css";
-@import "./forms.css";
+
+/* Formularios */
+@import "./buttons.css";
+@import "./form-controls.css";
+@import "./categories.css";
+
+/* Autenticación y perfil */
 @import "./auth.css";
-@import "./dashboard.css";
+@import "./profile.css";
+
+/* Panel principal (inicio) */
+@import "./navbar.css";
+@import "./layout.css";
+@import "./cards.css";
+@import "./panel.css";
+@import "./history.css";
+@import "./filters.css";
+@import "./pagination.css";
+@import "./budget.css";
+@import "./home.css";
+
+/* Gráficos y vista de egresos */
 @import "./charts.css";
+@import "./egresos.css";
+
 @import "./toast.css";
 @import "./periods.css";
 @import "./responsive.css";

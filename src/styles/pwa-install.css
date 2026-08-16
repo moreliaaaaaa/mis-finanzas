@@ -1,0 +1,70 @@
+/* ==========================================================================
+   BOTÓN INSTALAR PWA
+   ========================================================================== */
+
+.pwa-install-btn {
+  position: fixed;
+
+  right: 1.25rem;
+  bottom: 1.25rem;
+
+  z-index: 9000;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.55rem;
+
+  min-height: 46px;
+
+  padding: 0.75rem 1.15rem;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand),
+      var(--color-brand-hover)
+    );
+
+  color: white;
+
+  font-weight: 700;
+  font-size: 0.82rem;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+
+  border-radius: 14px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 25px rgba(2, 132, 199, 0.28);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+
+.pwa-install-btn:hover {
+  transform: translateY(-3px);
+
+  filter: brightness(1.05);
+
+  box-shadow:
+    0 14px 32px rgba(2, 132, 199, 0.38);
+}
+
+
+.pwa-install-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+
+.pwa-install-btn.hidden {
+  display: none;
+}
+
+

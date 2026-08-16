@@ -4,11 +4,12 @@
  * Copiado automáticamente a dist/ por Vite desde public/
  */
 
-const CACHE_NAME = "misfinanzas-v3";
+const CACHE_NAME = "misfinanzas-v4";
 const PRECACHE_URLS = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
+  "/assets/marca/logo-morelia.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",

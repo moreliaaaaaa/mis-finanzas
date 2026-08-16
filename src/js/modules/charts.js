@@ -6,11 +6,57 @@
 import Chart from "chart.js/auto";
 import { getState } from "../state.js";
 import { CATEGORIAS, COLORES_CATEGORIAS } from "../constants.js";
-import { obtenerNombreMes } from "../utils.js";
+import { formatMoneda, obtenerNombreMes } from "../utils.js";
 
 let chartInstance = null;
 let chartTendenciaInstance = null;
 let chartComparativaInstance = null;
+
+/**
+ * Obtiene los totales de egresos por categoría (incluye categorías personalizadas),
+ * ordenados de mayor a menor.
+ * @returns {Array<{id: string, label: string, color: string, total: number, count: number}>}
+ */
+function obtenerEgresosPorCategoria() {
+  const state = getState();
+
+  const mapa = {};
+  CATEGORIAS.egreso.forEach((cat) => {
+    mapa[cat.id] = {
+      id: cat.id,
+      label: cat.label,
+      color: COLORES_CATEGORIAS[cat.id] || "#94a3b8",
+      total: 0,
+      count: 0,
+    };
+  });
+
+  (state.customCategories || [])
+    .filter((c) => c.tipo === "egreso")
+    .forEach((cat) => {
+      if (!mapa[cat.id]) {
+        mapa[cat.id] = {
+          id: cat.id,
+          label: cat.label,
+          color: cat.color || "#94a3b8",
+          total: 0,
+          count: 0,
+        };
+      }
+    });
+
+  state.transactions.forEach((t) => {
+    if (t.tipo !== "egreso") return;
+    const item = mapa[t.categoria];
+    if (!item) return;
+    item.total += parseFloat(t.monto) || 0;
+    item.count += 1;
+  });
+
+  return Object.values(mapa)
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.total - a.total);
+}
 
 /**
  * Actualiza el gráfico de egresos
@@ -22,21 +68,9 @@ export function actualizarGraficoEgresos() {
 
   if (!ctx) return;
 
-  // Calcular totales por categoría
-  const totalesPorCategoria = {};
-  CATEGORIAS.egreso.forEach((cat) => {
-    totalesPorCategoria[cat.id] = 0;
-  });
+  const totales = obtenerEgresosPorCategoria();
 
-  let hayEgresos = false;
-  state.transactions.forEach((t) => {
-    if (t.tipo === "egreso" && t.categoria in totalesPorCategoria) {
-      totalesPorCategoria[t.categoria] += parseFloat(t.monto) || 0;
-      hayEgresos = true;
-    }
-  });
-
-  if (!hayEgresos) {
+  if (totales.length === 0) {
     ctx.style.display = "none";
     fallback?.classList.remove("hidden");
     if (chartInstance) {
@@ -49,18 +83,9 @@ export function actualizarGraficoEgresos() {
   ctx.style.display = "block";
   fallback?.classList.add("hidden");
 
-  const labels = [];
-  const dataValues = [];
-  const backgroundColors = [];
-
-  CATEGORIAS.egreso.forEach((cat) => {
-    const total = totalesPorCategoria[cat.id];
-    if (total > 0) {
-      labels.push(cat.label);
-      dataValues.push(total);
-      backgroundColors.push(COLORES_CATEGORIAS[cat.id] || "#cbd5e1");
-    }
-  });
+  const labels = totales.map((item) => item.label);
+  const dataValues = totales.map((item) => item.total);
+  const backgroundColors = totales.map((item) => item.color);
 
   // Destruir instancia anterior
   if (chartInstance) {
@@ -79,6 +104,7 @@ export function actualizarGraficoEgresos() {
           backgroundColor: backgroundColors,
           borderWidth: isDark ? 2 : 1,
           borderColor: isDark ? "#1e293b" : "#ffffff",
+          hoverOffset: 8,
         },
       ],
     },
@@ -101,6 +127,115 @@ export function actualizarGraficoEgresos() {
       cutout: "70%",
     },
   });
+}
+
+/**
+ * Renderiza el panel de egresos: total central, leyenda, tarjetas de resumen
+ * y desglose por categoría.
+ */
+export function renderizarDesgloseEgresos() {
+  const state = getState();
+  const totales = obtenerEgresosPorCategoria();
+  const totalGeneral = totales.reduce((acc, item) => acc + item.total, 0);
+  const totalMovimientos = totales.reduce((acc, item) => acc + item.count, 0);
+
+  // Total central del doughnut
+  const centro = document.getElementById("chart-egresos-total");
+  const centroValor = centro?.querySelector(".chart-doughnut-center-value");
+  if (centro && centroValor) {
+    if (totalGeneral > 0) {
+      centroValor.textContent = formatMoneda(totalGeneral);
+      centro.hidden = false;
+    } else {
+      centro.hidden = true;
+    }
+  }
+
+  // Leyenda del gráfico
+  const leyenda = document.getElementById("chart-egresos-legend");
+  if (leyenda) {
+    if (totalGeneral > 0) {
+      leyenda.innerHTML = totales
+        .map((item) => {
+          const pct = Math.round((item.total / totalGeneral) * 100);
+          return `
+            <div class="chart-legend-item">
+              <span class="chart-legend-color" style="background-color: ${item.color}"></span>
+              <span class="chart-legend-label">${item.label}</span>
+              <span class="chart-legend-pct">${pct}%</span>
+            </div>
+          `;
+        })
+        .join("");
+      leyenda.hidden = false;
+    } else {
+      leyenda.hidden = true;
+      leyenda.innerHTML = "";
+    }
+  }
+
+  // Tarjetas de resumen
+  const setTexto = (id, texto) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = texto;
+  };
+
+  setTexto("expense-total", formatMoneda(totalGeneral));
+  setTexto("expense-total-sub", `${totalMovimientos} movimiento${totalMovimientos === 1 ? "" : "s"}`);
+  setTexto("expense-categorias", String(totales.length));
+  setTexto(
+    "expense-categorias-sub",
+    `de ${CATEGORIAS.egreso.length + (state.customCategories || []).filter((c) => c.tipo === "egreso").length} posibles`
+  );
+
+  const mayor = totales[0];
+  if (mayor) {
+    const pctMayor = Math.round((mayor.total / totalGeneral) * 100);
+    setTexto("expense-mayor", mayor.label);
+    setTexto("expense-mayor-sub", `${formatMoneda(mayor.total)} · ${pctMayor}% del total`);
+  } else {
+    setTexto("expense-mayor", "—");
+    setTexto("expense-mayor-sub", "—");
+  }
+
+  // Desglose por categoría
+  const lista = document.getElementById("lista-detalle-egresos");
+  const vacio = document.getElementById("expense-breakdown-empty");
+  if (!lista || !vacio) return;
+
+  if (totalGeneral === 0) {
+    lista.innerHTML = "";
+    vacio.classList.remove("hidden");
+    return;
+  }
+
+  vacio.classList.add("hidden");
+  lista.innerHTML = totales
+    .map((item, index) => {
+      const pct = Math.round((item.total / totalGeneral) * 100);
+      return `
+        <div class="expense-breakdown-item">
+          <span class="expense-breakdown-rank">${index + 1}</span>
+          <div class="expense-breakdown-main">
+            <div class="expense-breakdown-top">
+              <div class="expense-breakdown-name-wrap">
+                <span class="expense-breakdown-dot" style="background-color: ${item.color}"></span>
+                <span class="expense-breakdown-name">${item.label}</span>
+                <span class="expense-breakdown-count">${item.count} mov.</span>
+              </div>
+              <div class="expense-breakdown-values">
+                <span class="expense-breakdown-amount">${formatMoneda(item.total)}</span>
+                <span class="expense-breakdown-percent">${pct}%</span>
+              </div>
+            </div>
+            <div class="expense-breakdown-bar">
+              <div class="expense-breakdown-fill" style="width: ${pct}%; background-color: ${item.color}"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 /**
@@ -446,6 +581,7 @@ export function destruirGraficos() {
 
 export default {
   actualizarGraficoEgresos,
+  renderizarDesgloseEgresos,
   renderizarGraficoTendencia,
   renderizarGraficoComparativa,
   crearGraficoBarras,

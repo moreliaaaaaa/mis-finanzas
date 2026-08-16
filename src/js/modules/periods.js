@@ -1,174 +1,526 @@
 /**
  * modules/periods.js
- * Gestión de periodos financieros - Cierre mensual
- *
- * Funcionalidad:
- * - Define periodos desde el día 6 de un mes hasta el día 5 del siguiente
- * - Al cerrar el periodo, el balance sobrante → Ahorro acumulado
- * - Si hay déficit → Deuda acumulada
- * - Historial de periodos cerrados
+ * Lógica de periodos financieros y cierre mensual.
  */
 
 import { getState, setState } from "../state.js";
 import { formatMoneda, generarId } from "../utils.js";
-import { guardarPeriodoStorage, obtenerPeriodoStorage } from "../storage.js";
+import {
+  guardarPeriodoStorage,
+  obtenerPeriodoStorage,
+} from "../storage.js";
 import { PERIOD_CONFIG } from "../constants.js";
 import { mostrarToast } from "../ui.js";
 import { recalcularYRenderizar } from "./dashboard.js";
+import { renderizarPeriodoEnDOM } from "./periods-render.js";
+
+
+/* ==========================================================================
+   UTILIDADES INTERNAS
+   ========================================================================== */
 
 /**
- * Inicializa los datos del periodo desde el almacenamiento
+ * Convierte una fecha Date a YYYY-MM-DD usando la zona horaria local.
+ *
+ * @param {Date} date
+ * @returns {string}
  */
-export function inicializarPeriodo() {
-  const savedPeriod = obtenerPeriodoStorage();
+function formatearFechaISO(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
-  if (savedPeriod) {
-    setState({
-      periodDay: savedPeriod.periodDay || PERIOD_CONFIG.defaultCloseDay,
-      savings: savedPeriod.savings || 0,
-      debt: savedPeriod.debt || 0,
-      currentPeriodStart: savedPeriod.currentPeriodStart,
-      currentPeriodEnd: savedPeriod.currentPeriodEnd,
-      periodHistory: savedPeriod.periodHistory || [],
-    });
-  } else {
-    // Calcular periodo actual basado en la fecha de hoy
-    const { periodStart, periodEnd } = calcularFechasPeriodo(
-      PERIOD_CONFIG.defaultCloseDay
-    );
-    setState({
-      periodDay: PERIOD_CONFIG.defaultCloseDay,
-      savings: 0,
-      debt: 0,
-      currentPeriodStart: periodStart,
-      currentPeriodEnd: periodEnd,
-      periodHistory: [],
-    });
-  }
-
-  // Si no hay periodo configurado o las fechas están vacías, recalcular
-  const state = getState();
-  if (!state.currentPeriodStart || !state.currentPeriodEnd) {
-    recalcularFechasPeriodo();
-  }
+  return `${year}-${month}-${day}`;
 }
 
+
 /**
- * Calcula las fechas de inicio y fin del periodo actual
- * basado en el día de cierre configurado
- * @param {number} closeDay - Día de cierre del mes (ej: 5)
- * @returns {{ periodStart: string, periodEnd: string }}
+ * Convierte una fecha YYYY-MM-DD a Date local.
+ *
+ * Evita utilizar new Date("YYYY-MM-DD"), ya que ese formato puede
+ * interpretarse como UTC y ocasionar cambios de día según la zona horaria.
+ *
+ * @param {string} dateString
+ * @returns {Date | null}
  */
-export function calcularFechasPeriodo(closeDay = 5) {
-  const today = new Date();
-  const todayDay = today.getDate();
-  const todayMonth = today.getMonth();
-  const todayYear = today.getFullYear();
-
-  let periodStart, periodEnd;
-
-  if (todayDay > closeDay) {
-    // Estamos en la primera mitad del periodo
-    // Inicio: día (closeDay+1) del mes actual
-    // Fin: día closeDay del mes siguiente
-    periodStart = new Date(todayYear, todayMonth, closeDay + 1);
-    periodEnd = new Date(todayYear, todayMonth + 1, closeDay);
-  } else {
-    // Estamos en la segunda mitad del periodo
-    // Inicio: día (closeDay+1) del mes anterior
-    // Fin: día closeDay del mes actual
-    periodStart = new Date(todayYear, todayMonth - 1, closeDay + 1);
-    periodEnd = new Date(todayYear, todayMonth, closeDay);
+function crearFechaLocal(dateString) {
+  if (
+    typeof dateString !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(dateString)
+  ) {
+    return null;
   }
 
-  // Formatear a YYYY-MM-DD
-  const formatDate = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  };
+  const [year, month, day] = dateString
+    .split("-")
+    .map(Number);
+
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+
+/**
+ * Normaliza el día de cierre.
+ *
+ * @param {number|string} value
+ * @returns {number}
+ */
+function normalizarDiaCierre(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed)) {
+    return PERIOD_CONFIG.defaultCloseDay;
+  }
+
+  return Math.max(1, Math.min(28, parsed));
+}
+
+
+/**
+ * Devuelve un arreglo seguro de transacciones.
+ *
+ * @param {*} transactions
+ * @returns {Array}
+ */
+function normalizarTransacciones(transactions) {
+  return Array.isArray(transactions)
+    ? transactions
+    : [];
+}
+
+
+/* ==========================================================================
+   ESTADO DEL PERIODO
+   ========================================================================== */
+
+function crearEstadoPeriodoBase(
+  closeDay = PERIOD_CONFIG.defaultCloseDay
+) {
+  const day = normalizarDiaCierre(closeDay);
+
+  const {
+    periodStart,
+    periodEnd,
+  } = calcularFechasPeriodo(day);
 
   return {
-    periodStart: formatDate(periodStart),
-    periodEnd: formatDate(periodEnd),
+    periodDay: day,
+    savings: 0,
+    debt: 0,
+    currentPeriodStart: periodStart,
+    currentPeriodEnd: periodEnd,
+    periodHistory: [],
   };
 }
 
-/**
- * Recalcula las fechas del periodo actual basado en el día configurado
- */
-export function recalcularFechasPeriodo() {
-  const state = getState();
-  const { periodStart, periodEnd } = calcularFechasPeriodo(state.periodDay);
 
-  setState({
-    currentPeriodStart: periodStart,
-    currentPeriodEnd: periodEnd,
-  });
+function guardarEstadoPeriodo(stateOverrides = {}) {
+  const state = {
+    ...getState(),
+    ...stateOverrides,
+  };
 
   guardarPeriodoStorage({
     periodDay: state.periodDay,
     savings: state.savings,
     debt: state.debt,
-    currentPeriodStart: periodStart,
-    currentPeriodEnd: periodEnd,
+    currentPeriodStart: state.currentPeriodStart,
+    currentPeriodEnd: state.currentPeriodEnd,
     periodHistory: state.periodHistory,
   });
 }
 
+
+/* ==========================================================================
+   CÁLCULOS
+   ========================================================================== */
+
 /**
- * Cambia el día de cierre del periodo
- * @param {number} newDay - Nuevo día de cierre (1-28)
+ * Calcula los totales de las transacciones pertenecientes a un periodo.
+ *
+ * @param {Array} transactions
+ * @param {string} periodStart
+ * @param {string} periodEnd
+ * @returns {{
+ *   totalIngresos: number,
+ *   totalEgresos: number,
+ *   transactionCount: number,
+ *   balance: number
+ * }}
  */
-export function configurarDiaCierre(newDay) {
-  const day = Math.max(1, Math.min(28, parseInt(newDay) || 5));
+function calcularTotalesPeriodo(
+  transactions,
+  periodStart,
+  periodEnd
+) {
+  const lista = normalizarTransacciones(transactions);
 
-  setState({ periodDay: day });
+  if (!periodStart || !periodEnd) {
+    return {
+      totalIngresos: 0,
+      totalEgresos: 0,
+      transactionCount: 0,
+      balance: 0,
+    };
+  }
 
-  recalcularFechasPeriodo();
+  const transaccionesPeriodo = lista.filter((transaction) => {
+    if (!transaction?.fecha) {
+      return false;
+    }
 
-  mostrarToast("success", `Día de cierre cambiado al ${day} de cada mes`);
+    return (
+      transaction.fecha >= periodStart &&
+      transaction.fecha <= periodEnd
+    );
+  });
+
+  const totales = transaccionesPeriodo.reduce(
+    (acc, transaction) => {
+      const monto = Number.parseFloat(transaction.monto);
+
+      if (!Number.isFinite(monto)) {
+        return acc;
+      }
+
+      if (transaction.tipo === "ingreso") {
+        acc.totalIngresos += monto;
+      } else if (transaction.tipo === "egreso") {
+        acc.totalEgresos += monto;
+      }
+
+      return acc;
+    },
+    {
+      totalIngresos: 0,
+      totalEgresos: 0,
+    }
+  );
+
+  return {
+    totalIngresos: totales.totalIngresos,
+    totalEgresos: totales.totalEgresos,
+    transactionCount: transaccionesPeriodo.length,
+    balance:
+      totales.totalIngresos -
+      totales.totalEgresos,
+  };
 }
 
-/**
- * Ejecuta el cierre del periodo actual
- * Calcula el balance, lo mueve a ahorro o deuda,
- * y genera un registro en el historial
- */
-export function cerrarPeriodo() {
-  const state = getState();
-  const { transactions, currentPeriodStart, currentPeriodEnd, periodDay, periodHistory, savings, debt } = state;
 
-  if (!currentPeriodStart || !currentPeriodEnd) {
-    mostrarToast("error", "No hay un periodo activo para cerrar");
+/**
+ * Calcula el periodo inmediatamente posterior a uno ya cerrado.
+ *
+ * Ejemplo:
+ * periodo cerrado: 2026-07-06 → 2026-08-05
+ * siguiente:        2026-08-06 → 2026-09-05
+ *
+ * @param {string} currentPeriodEnd
+ * @param {number} closeDay
+ * @returns {{ periodStart: string, periodEnd: string }}
+ */
+function calcularSiguientePeriodo(
+  currentPeriodEnd,
+  closeDay
+) {
+  const endDate = crearFechaLocal(currentPeriodEnd);
+
+  if (!endDate) {
+    return calcularFechasPeriodo(closeDay);
+  }
+
+  const day = normalizarDiaCierre(closeDay);
+
+  const nextStart = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    endDate.getDate() + 1
+  );
+
+  const nextEnd = new Date(
+    nextStart.getFullYear(),
+    nextStart.getMonth() + 1,
+    day
+  );
+
+  return {
+    periodStart: formatearFechaISO(nextStart),
+    periodEnd: formatearFechaISO(nextEnd),
+  };
+}
+
+
+/* ==========================================================================
+   INICIALIZACIÓN
+   ========================================================================== */
+
+/**
+ * Inicializa los datos del periodo desde el almacenamiento.
+ */
+export function inicializarPeriodo() {
+  const savedPeriod = obtenerPeriodoStorage();
+
+  if (!savedPeriod) {
+    const initialState = crearEstadoPeriodoBase();
+
+    setState(initialState);
+    guardarEstadoPeriodo(initialState);
+
     return;
   }
 
-  // Calcular transacciones dentro del periodo
-  const transaccionesPeriodo = transactions.filter((t) => {
-    return t.fecha >= currentPeriodStart && t.fecha <= currentPeriodEnd;
-  });
+  const periodDay = normalizarDiaCierre(
+    savedPeriod.periodDay
+  );
 
-  // Calcular ingresos y egresos del periodo
-  let totalIngresos = 0;
-  let totalEgresos = 0;
+  const restoredState = {
+    periodDay,
 
-  transaccionesPeriodo.forEach((t) => {
-    const monto = parseFloat(t.monto) || 0;
-    if (t.tipo === "ingreso") {
-      totalIngresos += monto;
-    } else {
-      totalEgresos += monto;
-    }
-  });
+    savings: Number.isFinite(Number(savedPeriod.savings))
+      ? Number(savedPeriod.savings)
+      : 0,
 
-  const balance = totalIngresos - totalEgresos;
+    debt: Number.isFinite(Number(savedPeriod.debt))
+      ? Number(savedPeriod.debt)
+      : 0,
 
-  // Actualizar ahorro/deuda acumulada
-  let newSavings = savings || 0;
-  let newDebt = debt || 0;
-  let tipoResultado = "";
+    currentPeriodStart:
+      savedPeriod.currentPeriodStart ?? null,
+
+    currentPeriodEnd:
+      savedPeriod.currentPeriodEnd ?? null,
+
+    periodHistory: Array.isArray(
+      savedPeriod.periodHistory
+    )
+      ? savedPeriod.periodHistory
+      : [],
+  };
+
+  setState(restoredState);
+
+  if (
+    !restoredState.currentPeriodStart ||
+    !restoredState.currentPeriodEnd
+  ) {
+    recalcularFechasPeriodo();
+  }
+}
+
+
+/* ==========================================================================
+   FECHAS DEL PERIODO
+   ========================================================================== */
+
+/**
+ * Calcula las fechas de inicio y fin del periodo correspondiente
+ * a la fecha actual.
+ *
+ * @param {number} closeDay Día de cierre mensual.
+ * @returns {{ periodStart: string, periodEnd: string }}
+ */
+export function calcularFechasPeriodo(
+  closeDay = PERIOD_CONFIG.defaultCloseDay
+) {
+  const day = normalizarDiaCierre(closeDay);
+
+  const today = new Date();
+
+  const todayDay = today.getDate();
+  const todayMonth = today.getMonth();
+  const todayYear = today.getFullYear();
+
+  let periodStart;
+  let periodEnd;
+
+  if (todayDay > day) {
+    periodStart = new Date(
+      todayYear,
+      todayMonth,
+      day + 1
+    );
+
+    periodEnd = new Date(
+      todayYear,
+      todayMonth + 1,
+      day
+    );
+  } else {
+    periodStart = new Date(
+      todayYear,
+      todayMonth - 1,
+      day + 1
+    );
+
+    periodEnd = new Date(
+      todayYear,
+      todayMonth,
+      day
+    );
+  }
+
+  return {
+    periodStart: formatearFechaISO(periodStart),
+    periodEnd: formatearFechaISO(periodEnd),
+  };
+}
+
+
+/**
+ * Recalcula las fechas del periodo actual según el día configurado.
+ */
+export function recalcularFechasPeriodo() {
+  const state = getState();
+
+  const periodDay = normalizarDiaCierre(
+    state.periodDay
+  );
+
+  const {
+    periodStart,
+    periodEnd,
+  } = calcularFechasPeriodo(periodDay);
+
+  const updates = {
+    periodDay,
+    currentPeriodStart: periodStart,
+    currentPeriodEnd: periodEnd,
+  };
+
+  setState(updates);
+  guardarEstadoPeriodo(updates);
+}
+
+
+/* ==========================================================================
+   CONFIGURACIÓN
+   ========================================================================== */
+
+/**
+ * Cambia el día de cierre del periodo.
+ *
+ * @param {number|string} newDay Nuevo día de cierre.
+ */
+export function configurarDiaCierre(newDay) {
+  const day = normalizarDiaCierre(newDay);
+
+  const {
+    periodStart,
+    periodEnd,
+  } = calcularFechasPeriodo(day);
+
+  const updates = {
+    periodDay: day,
+    currentPeriodStart: periodStart,
+    currentPeriodEnd: periodEnd,
+  };
+
+  setState(updates);
+  guardarEstadoPeriodo(updates);
+
+  renderizarSeccionPeriodo();
+
+  mostrarToast(
+    "success",
+    `Día de cierre actualizado al ${day} de cada mes`
+  );
+}
+
+
+/* ==========================================================================
+   CIERRE DEL PERIODO
+   ========================================================================== */
+
+/**
+ * Ejecuta el cierre del periodo actual.
+ */
+export function cerrarPeriodo() {
+  const state = getState();
+
+  const transactions = normalizarTransacciones(
+    state.transactions
+  );
+
+  const currentPeriodStart =
+    state.currentPeriodStart;
+
+  const currentPeriodEnd =
+    state.currentPeriodEnd;
+
+  const periodDay = normalizarDiaCierre(
+    state.periodDay
+  );
+
+  const periodHistory = Array.isArray(
+    state.periodHistory
+  )
+    ? state.periodHistory
+    : [];
+
+  const savings = Number(state.savings) || 0;
+  const debt = Number(state.debt) || 0;
+
+
+  /* Validar periodo activo */
+
+  if (
+    !currentPeriodStart ||
+    !currentPeriodEnd
+  ) {
+    mostrarToast(
+      "error",
+      "No hay un periodo activo para cerrar"
+    );
+
+    return;
+  }
+
+
+  /* Evitar cerrar dos veces el mismo periodo */
+
+  const periodoYaCerrado = periodHistory.some(
+    (period) =>
+      period.start === currentPeriodStart &&
+      period.end === currentPeriodEnd
+  );
+
+  if (periodoYaCerrado) {
+    mostrarToast(
+      "warning",
+      "Este periodo ya fue cerrado"
+    );
+
+    return;
+  }
+
+
+  /* Calcular resultado */
+
+  const {
+    totalIngresos,
+    totalEgresos,
+    transactionCount,
+    balance,
+  } = calcularTotalesPeriodo(
+    transactions,
+    currentPeriodStart,
+    currentPeriodEnd
+  );
+
+
+  let newSavings = savings;
+  let newDebt = debt;
+  let tipoResultado = "equilibrio";
 
   if (balance > 0) {
     newSavings += balance;
@@ -176,237 +528,171 @@ export function cerrarPeriodo() {
   } else if (balance < 0) {
     newDebt += Math.abs(balance);
     tipoResultado = "deficit";
-  } else {
-    tipoResultado = "equilibrio";
   }
 
-  // Agregar al historial
+
+  /* Crear registro histórico */
+
   const nuevaEntrada = {
     id: generarId(),
+
     start: currentPeriodStart,
     end: currentPeriodEnd,
+
     totalIngresos,
     totalEgresos,
+
+    transactionCount,
+
     balance,
     result: tipoResultado,
+
     closedAt: new Date().toISOString(),
   };
 
-  const newHistory = [nuevaEntrada, ...(periodHistory || [])];
 
-  // Calcular nuevas fechas para el siguiente periodo
-  const { periodStart: newStart, periodEnd: newEnd } = calcularFechasPeriodo(periodDay);
+  const newHistory = [
+    nuevaEntrada,
+    ...periodHistory,
+  ];
 
-  // Actualizar estado
-  setState({
+
+  /* Avanzar al periodo siguiente */
+
+  const {
+    periodStart: newStart,
+    periodEnd: newEnd,
+  } = calcularSiguientePeriodo(
+    currentPeriodEnd,
+    periodDay
+  );
+
+
+  const updates = {
     savings: newSavings,
     debt: newDebt,
+
     currentPeriodStart: newStart,
     currentPeriodEnd: newEnd,
-    periodHistory: newHistory,
-  });
 
-  // Guardar en storage
-  guardarPeriodoStorage({
+    periodHistory: newHistory,
+  };
+
+
+  /* Actualizar estado */
+
+  setState(updates);
+
+  guardarEstadoPeriodo({
     periodDay,
-    savings: newSavings,
-    debt: newDebt,
-    currentPeriodStart: newStart,
-    currentPeriodEnd: newEnd,
-    periodHistory: newHistory,
+    ...updates,
   });
 
-  // Mostrar resultado
-  const balanceFormateado = formatMoneda(Math.abs(balance));
+
+  /* Notificación */
+
+  const balanceFormateado = formatMoneda(
+    Math.abs(balance)
+  );
+
   if (balance > 0) {
     mostrarToast(
       "success",
-      `✅ Periodo cerrado. Ahorro acumulado: +${balanceFormateado}`
+      `Periodo cerrado. Balance positivo: +${balanceFormateado}`
     );
   } else if (balance < 0) {
     mostrarToast(
       "warning",
-      `⚠️ Periodo cerrado con déficit de ${balanceFormateado}`
+      `Periodo cerrado con déficit de ${balanceFormateado}`
     );
   } else {
-    mostrarToast("info", "📊 Periodo cerrado en equilibrio (balance cero)");
+    mostrarToast(
+      "info",
+      "Periodo cerrado en equilibrio"
+    );
   }
 
-  // Actualizar dashboard
+
+  /* Refrescar interfaz */
+
   recalcularYRenderizar();
   renderizarSeccionPeriodo();
 }
 
+
+/* ==========================================================================
+   RESUMEN
+   ========================================================================== */
+
 /**
- * Obtiene un resumen del estado actual del periodo
+ * Obtiene el resumen del periodo actual.
+ *
  * @returns {object}
  */
 export function obtenerResumenPeriodo() {
   const state = getState();
-  const { transactions, currentPeriodStart, currentPeriodEnd, savings, debt, periodDay, periodHistory } = state;
 
-  const transaccionesPeriodo = transactions.filter((t) => {
-    return t.fecha >= currentPeriodStart && t.fecha <= currentPeriodEnd;
-  });
+  const transactions = normalizarTransacciones(
+    state.transactions
+  );
 
-  let totalIngresos = 0;
-  let totalEgresos = 0;
+  const periodHistory = Array.isArray(
+    state.periodHistory
+  )
+    ? state.periodHistory
+    : [];
 
-  transaccionesPeriodo.forEach((t) => {
-    const monto = parseFloat(t.monto) || 0;
-    if (t.tipo === "ingreso") {
-      totalIngresos += monto;
-    } else {
-      totalEgresos += monto;
-    }
-  });
-
-  const balance = totalIngresos - totalEgresos;
+  const totales = calcularTotalesPeriodo(
+    transactions,
+    state.currentPeriodStart,
+    state.currentPeriodEnd
+  );
 
   return {
-    periodStart: currentPeriodStart,
-    periodEnd: currentPeriodEnd,
-    periodDay,
-    totalIngresos,
-    totalEgresos,
-    balance,
-    savings,
-    debt,
-    transactionCount: transaccionesPeriodo.length,
-    totalTransactions: transactions.length,
-    periodHistory: periodHistory || [],
+    periodStart: state.currentPeriodStart,
+    periodEnd: state.currentPeriodEnd,
+
+    periodDay: normalizarDiaCierre(
+      state.periodDay
+    ),
+
+    totalIngresos: totales.totalIngresos,
+    totalEgresos: totales.totalEgresos,
+    balance: totales.balance,
+
+    savings: Number(state.savings) || 0,
+    debt: Number(state.debt) || 0,
+
+    transactionCount:
+      totales.transactionCount,
+
+    totalTransactions:
+      transactions.length,
+
+    periodHistory,
   };
 }
+
+
+/* ==========================================================================
+   RENDER
+   ========================================================================== */
 
 /**
- * Renderiza la sección de periodo en el dashboard
+ * Orquesta el pintado de la sección de periodos.
+ *
+ * Este módulo no contiene HTML.
  */
 export function renderizarSeccionPeriodo() {
-  const containers = document.querySelectorAll("#period-section, #period-section-view");
-  if (!containers.length) return;
-
   const resumen = obtenerResumenPeriodo();
 
-  // Formatear fechas para mostrar
-  const formatearFecha = (fechaStr) => {
-    if (!fechaStr) return "—";
-    const partes = fechaStr.split("-");
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-  };
-
-  // Generar historial HTML
-  let historialHTML = "";
-  if (resumen.periodHistory.length > 0) {
-    historialHTML = resumen.periodHistory
-      .map((entry) => {
-        const balanceClass =
-          entry.balance > 0
-            ? "text-ingreso"
-            : entry.balance < 0
-            ? "text-egreso"
-            : "";
-        const icono =
-          entry.result === "ahorro"
-            ? "💰"
-            : entry.result === "deficit"
-            ? "🔴"
-            : "⚖️";
-        const label =
-          entry.result === "ahorro"
-            ? "→ Ahorro"
-            : entry.result === "deficit"
-            ? "→ Déficit"
-            : "Equilibrio";
-
-        return `
-          <div class="period-history-item">
-            <div class="period-history-info">
-              <span class="period-history-icon">${icono}</span>
-              <span class="period-history-dates">${formatearFecha(entry.start)} - ${formatearFecha(entry.end)}</span>
-              <span class="period-history-label">${label}</span>
-            </div>
-            <span class="period-history-amount ${balanceClass}">${formatMoneda(Math.abs(entry.balance))}</span>
-          </div>
-        `;
-      })
-      .join("");
-  } else {
-    historialHTML = `
-      <div class="empty-state period-empty">
-        <div class="empty-state-text">Aún no hay periodos cerrados.</div>
-      </div>
-    `;
-  }
-
-  containers.forEach((container) => {
-    container.innerHTML = `
-      <!-- Period Info Bar -->
-      <div class="period-info-bar">
-        <div class="period-info-content">
-          <div class="period-dates">
-            <span class="period-label">Periodo actual:</span>
-            <strong>${formatearFecha(resumen.periodStart)} → ${formatearFecha(resumen.periodEnd)}</strong>
-            <span class="period-badge ${resumen.balance >= 0 ? "period-badge-positive" : "period-badge-negative"}">
-              ${resumen.balance >= 0 ? "🟢" : "🔴"} Balance: ${formatMoneda(resumen.balance)}
-            </span>
-          </div>
-          <div class="period-actions">
-            <div class="period-day-config">
-              <label for="period-day-input" class="period-day-label">Día de cierre:</label>
-              <input
-                type="number"
-                id="period-day-input"
-                class="period-day-input"
-                min="1"
-                max="28"
-                value="${resumen.periodDay}"
-                onchange="window.cambiarDiaCierre(this.value)"
-              >
-            </div>
-            <button id="btn-cerrar-periodo" class="btn-period-close" onclick="window.cerrarPeriodo()">
-              🔄 Cerrar Periodo
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Savings & Debt Cards Row -->
-      <div class="period-cards-row">
-        <div class="card period-card ahorro-card">
-          <div class="card-content">
-            <p class="card-label">Ahorros Acumulados</p>
-            <h3 class="card-amount text-ingreso">${formatMoneda(resumen.savings)}</h3>
-          </div>
-          <div class="card-icon ahorro-icon">
-            💰
-          </div>
-        </div>
-        <div class="card period-card deuda-card">
-          <div class="card-content">
-            <p class="card-label">Deuda Acumulada</p>
-            <h3 class="card-amount text-egreso">${formatMoneda(resumen.debt)}</h3>
-          </div>
-          <div class="card-icon deuda-icon">
-            🔴
-          </div>
-        </div>
-      </div>
-
-      <!-- Period History -->
-      <div class="period-history-section">
-        <details class="period-history-details" ${resumen.periodHistory.length > 0 ? "open" : ""}>
-          <summary class="period-history-summary">
-            <span>📋 Historial de Periodos</span>
-            <span class="period-history-count">${resumen.periodHistory.length} periodo(s)</span>
-          </summary>
-          <div class="period-history-list">
-            ${historialHTML}
-          </div>
-        </details>
-      </div>
-    `;
-  });
+  renderizarPeriodoEnDOM(resumen);
 }
+
+
+/* ==========================================================================
+   EXPORTACIÓN
+   ========================================================================== */
 
 export default {
   inicializarPeriodo,
@@ -417,4 +703,3 @@ export default {
   obtenerResumenPeriodo,
   renderizarSeccionPeriodo,
 };
-

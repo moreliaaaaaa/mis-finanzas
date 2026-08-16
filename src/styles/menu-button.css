@@ -1,0 +1,72 @@
+/* ==========================================================================
+   BOTON MENU
+   ========================================================================== */
+
+/* ==========================================================================
+   BOTÓN MENÚ
+   ========================================================================== */
+
+.menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.5rem;
+  height: 2.5rem;
+
+  border: 1px solid rgba(148, 163, 184, 0.2);
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f8fafc,
+      #e2e8f0
+    );
+
+  color: #334155;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.menu-button:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand),
+      var(--color-brand-hover)
+    );
+
+  color: white;
+
+  transform: translateY(-2px);
+
+  border-color: transparent;
+
+  box-shadow:
+    0 8px 20px rgba(2, 132, 199, 0.28);
+}
+
+
+.menu-button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+
+.menu-button .asset-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+

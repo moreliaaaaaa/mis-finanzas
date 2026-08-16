@@ -1,15 +1,18 @@
 <div id="vista-presupuesto" data-vista="presupuesto" class="hidden">
   <section class="page-header">
     <div class="page-header-content">
-      <button
-        type="button"
-        class="btn-back"
-        onclick="window.cambiarVista('home')"
-      >
-        <i data-lucide="arrow-left"></i>
-        Volver al Panel
-      </button>
-      <h1 class="section-title">Presupuesto</h1>
+      <div class="page-title-row">
+        <button
+          type="button"
+          class="btn-back"
+          onclick="window.irAHome()"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+        >
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+        </button>
+        <h1 class="section-title">Presupuesto</h1>
+      </div>
       <p class="section-subtitle">
         Configura y supervisa el límite del mes actual.
       </p>

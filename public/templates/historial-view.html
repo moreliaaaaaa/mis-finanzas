@@ -2,22 +2,67 @@
   id="vista-historial-periodos"
   data-vista="historial-periodos"
   class="hidden"
+  aria-labelledby="historial-periodos-title"
 >
-  <section class="page-header">
+  <header class="page-header">
     <div class="page-header-content">
-      <button
-        type="button"
-        class="btn-back"
-        onclick="window.cambiarVista('home')"
-      >
-        <i data-lucide="arrow-left"></i>
-        Volver al Panel
-      </button>
-      <h1 class="section-title">Historial de Periodos</h1>
-      <p class="section-subtitle">
-        Consulta los cierres mensuales anteriores y su balance consolidado.
-      </p>
+      <div class="page-title-row">
+        <button
+          type="button"
+          class="btn-back"
+          onclick="window.irAHome()"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+        >
+          <i
+            data-lucide="arrow-left"
+            aria-hidden="true"
+          ></i>
+        </button>
+
+        <div class="page-title-copy">
+          <span class="page-kicker">
+            Cierre mensual
+          </span>
+
+          <h1
+            class="section-title"
+            id="historial-periodos-title"
+          >
+            Periodos
+          </h1>
+        </div>
+      </div>
     </div>
-  </section>
-  <div id="period-section-view" class="section-space"></div>
+  </header>
+
+  <main
+    id="period-section-view"
+    class="section-space period-section-shell"
+  >
+    <section
+      class="period-current-section"
+      aria-label="Periodo actual"
+    >
+      <div data-period-current></div>
+    </section>
+
+    <section
+      class="period-summary-section"
+      aria-label="Resumen financiero del periodo"
+    >
+      <div data-period-cards></div>
+    </section>
+
+    <section
+      class="period-history-section"
+      aria-label="Historial de periodos"
+    >
+      <div
+        data-period-history
+        aria-live="polite"
+        aria-relevant="additions text"
+      ></div>
+    </section>
+  </main>
 </div>

@@ -1,9 +1,20 @@
 <div id="vista-ultimos" data-vista="ultimos" class="hidden">
   <section class="panel history-panel">
     <div class="panel-header">
-      <div class="panel-title">
+      <div class="panel-title-row">
+        <button
+          type="button"
+          class="btn-back"
+          onclick="window.irAHome()"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+        >
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+        </button>
+        <div class="panel-title">
         <i data-lucide="list" class="asset-icon panel-title-icon"></i>
         <span>Últimos Movimientos</span>
+        </div>
       </div>
       <div class="panel-actions">
         <button type="button" class="btn-export" onclick="window.exportarCSV()">

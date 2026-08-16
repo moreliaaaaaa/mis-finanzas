@@ -70,8 +70,8 @@ export function mostrarNotificacion(titulo, opciones = {}) {
   if (Notification.permission !== "granted") return;
 
   const opcionesDefault = {
-    icon: "/src/assets/marca/logo-morelia.svg",
-    badge: "/src/assets/marca/logo-morelia.svg",
+    icon: "/assets/marca/logo-morelia.svg",
+    badge: "/icons/icon-192.png",
     vibrate: [100, 50, 100],
     tag: "misfinanzas-" + Date.now(),
     ...opciones,

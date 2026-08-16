@@ -97,6 +97,24 @@ export function limpiarStorage() {
 }
 
 /**
+ * Limpia solo datos financieros del usuario actual.
+ * Mantiene cuenta, sesión, perfil, foto, nombre, correo y categorías.
+ */
+export function limpiarDatosFinancierosStorage() {
+  try {
+    ["transactions", "tipoActivoForm", "filtroHistorial", "pendientes", "presupuestos"].forEach(
+      (key) => eliminarDelStorage(key)
+    );
+    eliminarPeriodoStorage();
+    localStorage.removeItem("misfinanzas_clean_start");
+    return true;
+  } catch (error) {
+    console.error("Error limpiando datos financieros:", error);
+    return false;
+  }
+}
+
+/**
  * Exporta toda la información para backup
  * @returns {object}
  */
@@ -214,6 +232,20 @@ export function obtenerPeriodoStorage() {
 }
 
 /**
+ * Elimina los datos del periodo financiero del usuario actual.
+ */
+export function eliminarPeriodoStorage() {
+  try {
+    const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
+    localStorage.removeItem(fullKey);
+    return true;
+  } catch (error) {
+    console.error("Error eliminando periodo:", error);
+    return false;
+  }
+}
+
+/**
  * Descarga un archivo de backup JSON
  * @param {object} data
  * @param {string} filename
@@ -243,10 +275,14 @@ export default {
   obtenerDelStorage,
   eliminarDelStorage,
   limpiarStorage,
+  limpiarDatosFinancierosStorage,
   exportarBackup,
   importarBackup,
   obtenerTamañoStorage,
   guardarTema,
   obtenerTema,
+  guardarPeriodoStorage,
+  obtenerPeriodoStorage,
+  eliminarPeriodoStorage,
   descargarBackup,
 };

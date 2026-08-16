@@ -1,0 +1,78 @@
+/* ==========================================================================
+   LAYOUT GENERAL
+   ========================================================================== */
+
+
+/* CONTENEDOR PRINCIPAL */
+main {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+}
+
+@media (min-width: 640px) {
+  main {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* CONTENEDOR DE DASHBOARD */
+.dashboard-container {
+  width: 100%;
+}
+
+.section-space {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 0.875rem;
+  color: var(--texto-atenuado);
+  margin-bottom: 1rem;
+}
+
+
+/* SECCIÓN CON DOS COLUMNAS */
+.layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .layout-grid.two-col {
+    grid-template-columns: 2fr 3fr;
+  }
+
+  .layout-grid.five-seven {
+    grid-template-columns: 5fr 7fr;
+  }
+}
+
+
+/* FOOTER */
+footer {
+  background-color: var(--bg-navbar);
+  border-top: 1px solid var(--borde-color);
+  padding: 1.5rem;
+  margin-top: 3rem;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+footer p {
+  font-size: 0.75rem;
+  color: var(--texto-atenuado);
+}
+
+footer p + p {
+  margin-top: 0.5rem;
+}
+

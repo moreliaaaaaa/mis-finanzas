@@ -18,25 +18,16 @@
       <div class="navbar-brand-identity">
         <img
           class="navbar-logo-brand"
-          src="/src/assets/marca/logo-morelia.svg"
-          alt="Morelia Finanzas"
-        />
-        <span class="navbar-brand-wordmark">Finanzas</span>
+          src="/assets/marca/logo-morelia.svg"
+          alt="Morelia Finanzas">
       </div>
-      <!-- <div class="navbar-brand-text">
-        <p>Control de ingresos, hogar y taller de costura</p>
-      </div> -->
+
     </div>
-    <button
-      id="global-back-btn"
-      type="button"
-      class="btn-back-fixed hidden"
-      onclick="window.irAHome()"
-      aria-label="Volver al inicio"
-      title="Volver al inicio"
-    >
-      <i data-lucide="arrow-left"></i>
-    </button>
+
+    <div class="navbar-home-greeting" aria-live="polite">
+      Hola. <span id="header-user-name">Usuario</span>
+    </div>
+
   </div>
 </header>
 <div id="nav-backdrop" class="nav-backdrop" hidden></div>
@@ -47,6 +38,13 @@
   aria-label="Menú principal"
 >
   <div class="dropdown-header">
+    <div class="dropdown-brand">
+      <img
+        class="dropdown-brand-logo"
+        src="/assets/marca/logo-morelia.svg"
+        alt="Morelia Finanzas"
+      />
+    </div>
     <button
       type="button"
       class="dropdown-close"

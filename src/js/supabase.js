@@ -320,6 +320,48 @@ export async function eliminarTransaccionSupabase(id) {
 }
 
 /**
+ * Elimina en Supabase los movimientos financieros cargados del usuario actual.
+ * No toca perfiles, autenticación ni otros datos de cuenta.
+ * @param {array} transactions
+ * @returns {Promise<boolean>}
+ */
+export async function borrarTransaccionesSupabase(transactions = getState().transactions) {
+  if (!esSupabaseConectado()) return true;
+
+  const ids = [...new Set((transactions || []).map((t) => t?.id).filter(Boolean))];
+  if (ids.length === 0) return true;
+  const activeUserId = getState().userId;
+  const shouldScopeByUser = activeUserId && !String(activeUserId).startsWith("local_");
+
+  try {
+    for (let i = 0; i < ids.length; i += 100) {
+      const lote = ids.slice(i, i + 100);
+      let query = supabaseClient
+        .from("transacciones")
+        .delete()
+        .in("id", lote);
+
+      if (shouldScopeByUser) {
+        query = query.eq("user_id", activeUserId);
+      }
+
+      const { error } = await query;
+
+      if (error) throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error borrando transacciones en Supabase:", error);
+    mostrarToast(
+      "warning",
+      "Se limpiaron los datos de este dispositivo, pero no se pudo borrar todo en la nube."
+    );
+    return false;
+  }
+}
+
+/**
  * Reintenta subir los movimientos pendientes que no pudieron sincronizarse.
  * Se usa al iniciar la app y cuando vuelve la conexión.
  * @returns {Promise<boolean>}

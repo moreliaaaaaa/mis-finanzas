@@ -1,43 +1,42 @@
 <div id="vista-perfil" data-vista="perfil" class="hidden">
-  <section class="page-header">
-    <div class="page-header-content">
-      <button
-        type="button"
-        class="btn-back"
-        onclick="window.cambiarVista('home')"
-      >
-        <i data-lucide="arrow-left"></i>
-        Volver al panel
-      </button>
-      <h1 class="section-title">Perfil</h1>
-      <p class="section-subtitle">
-        Configura tu cuenta y tus preferencias personales.
-      </p>
-    </div>
-  </section>
+  <div class="main-layout profile-layout">
+    <section class="panel profile-panel">
+      <div class="panel-header profile-panel-header">
+        <div class="panel-title-row">
+          <button
+            type="button"
+            class="btn-back"
+            onclick="window.irAHome()"
+            aria-label="Volver al inicio"
+            title="Volver al inicio"
+          >
+            <i data-lucide="arrow-left" aria-hidden="true"></i>
+          </button>
 
-  <div class="main-layout">
-    <section class="panel">
-      <div class="panel-header">
-        <div class="panel-title">
-          <i data-lucide="user" class="asset-icon panel-title-icon"></i>
-          <span>Mi cuenta</span>
+          <div class="profile-panel-title">
+            <i
+              data-lucide="user"
+              class="profile-panel-title-icon"
+              aria-hidden="true"
+            ></i>
+            <h1>Perfil</h1>
+          </div>
         </div>
       </div>
 
       <div class="profile-card-summary">
         <div class="profile-avatar-badge" id="profile-avatar-badge">MF</div>
-        <div>
+        <div class="profile-summary-copy">
           <h3 id="profile-user-name">Mi perfil</h3>
           <p id="profile-user-email">Usuario de Morelia Finanzas</p>
         </div>
       </div>
 
-      <div class="panel" id="profile-edit-panel" hidden>
+      <div class="panel profile-edit-panel" id="profile-edit-panel" hidden>
         <div class="panel-header">
           <div class="panel-title">
             <i data-lucide="edit" class="asset-icon panel-title-icon"></i>
-            <span>Editar mi información</span>
+            <span>Editar mi informaci&oacute;n</span>
           </div>
         </div>
 
@@ -83,7 +82,7 @@
           </label>
 
           <label class="profile-edit-field" for="profile-edit-email">
-            <span>Correo electrónico</span>
+            <span>Correo electr&oacute;nico</span>
             <input
               type="email"
               id="profile-edit-email"
@@ -126,7 +125,7 @@
         </div>
 
         <div class="profile-option-row">
-          <span>Mi información</span>
+          <span>Mi informaci&oacute;n</span>
           <button
             type="button"
             id="profile-edit-info-btn"
@@ -149,7 +148,7 @@
         </div>
 
         <div class="profile-option-row">
-          <span>Sincronización</span>
+          <span>Sincronizaci&oacute;n</span>
           <button type="button" class="btn-secondary" disabled>
             Configurar
           </button>
@@ -157,11 +156,11 @@
 
         <div class="profile-option-row">
           <span>Preferencias</span>
-          <button type="button" class="btn-secondary" disabled>Ver más</button>
+          <button type="button" class="btn-secondary" disabled>Ver m&aacute;s</button>
         </div>
 
         <button type="button" id="profile-logout-btn" class="btn-primary">
-          Cerrar sesión
+          Cerrar sesi&oacute;n
         </button>
       </div>
     </section>

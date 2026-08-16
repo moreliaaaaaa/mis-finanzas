@@ -16,16 +16,24 @@ import {
   irAHistorialPeriodos,
   irAPresupuesto,
   irAPerfil,
+  cambiarSeccionEgresos,
   toggleNavMenu,
   setNavMenuState,
 } from "./ui.js";
-import { setState, getState, subscribe, resetState } from "./state.js";
-import { limpiarStorage, obtenerDelStorage, guardarEnStorage, definirAlcanceStorage } from "./storage.js";
+import { setState, getState, subscribe } from "./state.js";
+import {
+  obtenerDelStorage,
+  guardarEnStorage,
+  definirAlcanceStorage,
+  guardarPeriodoStorage,
+  limpiarDatosFinancierosStorage,
+} from "./storage.js";
 import {
   inicializarSupabase,
   obtenerTransaccionesSupabase,
   sincronizarPendientes,
   esSupabaseConectado,
+  borrarTransaccionesSupabase,
 } from "./supabase.js";
 import { MENSAJES } from "./constants.js";
 import { recalcularYRenderizar } from "./modules/dashboard.js";
@@ -49,6 +57,7 @@ import {
   renderizarSeccionPeriodo,
   cerrarPeriodo,
   configurarDiaCierre,
+  calcularFechasPeriodo,
 } from "./modules/periods.js";
 import {
   inicializarNotificaciones,
@@ -57,6 +66,7 @@ import {
 } from "./notifications.js";
 import {
   actualizarGraficoEgresos,
+  renderizarDesgloseEgresos,
   renderizarGraficoTendencia,
   renderizarGraficoComparativa,
 } from "./modules/charts.js";
@@ -432,17 +442,50 @@ function setupProfileOptions() {
 
     const resetDataBtn = document.getElementById("profile-reset-data-btn");
 
-    resetDataBtn?.addEventListener("click", () => {
+    resetDataBtn?.addEventListener("click", async () => {
       const confirmed = window.confirm(
         "¿Borrar todos los datos financieros y comenzar desde cero? Esta acción no se puede deshacer."
       );
       if (!confirmed) return;
 
-      localStorage.setItem("misfinanzas_clean_start", "true");
-      limpiarStorage();
-      resetState();
-      mostrarToast("success", "Datos financieros borrados. La aplicación se reiniciará desde cero.");
-      window.location.reload();
+      const state = getState();
+      const { periodStart, periodEnd } = calcularFechasPeriodo(state.periodDay || 5);
+
+      await borrarTransaccionesSupabase(state.transactions);
+      limpiarDatosFinancierosStorage();
+
+      setState({
+        transactions: [],
+        filtroHistorial: "todos",
+        busquedaTexto: "",
+        filtroFechaInicio: null,
+        filtroFechaFin: null,
+        paginaActual: 1,
+        presupuestos: {},
+        savings: 0,
+        debt: 0,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        periodHistory: [],
+        error: null,
+        isLoading: false,
+      });
+
+      guardarPeriodoStorage({
+        periodDay: state.periodDay || 5,
+        savings: 0,
+        debt: 0,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        periodHistory: [],
+      });
+
+      recalcularYRenderizar();
+      renderizarSeccionPeriodo();
+      renderizarPresupuesto("budget-section-view");
+      verificarAlertasPresupuesto(new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0"));
+      renderizarPerfil();
+      mostrarToast("success", "Datos financieros borrados. Tu perfil se mantiene intacto.");
     });
 
     logoutBtn?.addEventListener("click", async () => {
@@ -470,7 +513,8 @@ function setupStateSubscribers() {
 /**
  * Carga el respaldo local del usuario actual.
  * Las cuentas nuevas empiezan vacías (sin datos de demostración).
- * Si la clave por usuario aún no existe, migra el respaldo local antiguo (sin separar).
+ * Si no existe respaldo por usuario, intenta recuperar el respaldo local
+ * antiguo (sin separar) para no perder datos tras la migración por usuario.
  */
 function cargarMovimientosLocales() {
   const datos = obtenerDelStorage("transactions");
@@ -480,23 +524,18 @@ function cargarMovimientosLocales() {
     return;
   }
 
-  // Migración (una sola vez): respaldo local guardado antes de separar por usuario
-  const migrado = localStorage.getItem("misfinanzas_legacy_migrated") === "true";
-  if (!migrado) {
-    try {
-      const legacy = localStorage.getItem("misfinanzas_data_transactions");
-      if (legacy) {
-        const datosLegacy = JSON.parse(legacy);
-        if (Array.isArray(datosLegacy) && datosLegacy.length > 0) {
-          setState({ transactions: datosLegacy });
-          localStorage.setItem("misfinanzas_legacy_migrated", "true");
-          return;
-        }
+  // Migración del respaldo local guardado antes de separar por usuario
+  try {
+    const legacy = localStorage.getItem("misfinanzas_data_transactions");
+    if (legacy) {
+      const datosLegacy = JSON.parse(legacy);
+      if (Array.isArray(datosLegacy) && datosLegacy.length > 0) {
+        setState({ transactions: datosLegacy });
+        return;
       }
-    } catch (error) {
-      console.warn("No se pudo migrar el respaldo local antiguo:", error);
     }
-    localStorage.setItem("misfinanzas_legacy_migrated", "true");
+  } catch (error) {
+    console.warn("No se pudo migrar el respaldo local antiguo:", error);
   }
 
   setState({ transactions: [] });
@@ -515,9 +554,11 @@ window.filtrarPorRangoFechas = filtrarPorRangoFechas;
 window.limpiarFiltros = limpiarFiltros;
 window.cambiarPagina = cambiarPagina;
 window.exportarPDF = exportarPDF;
+window.cambiarSeccionEgresos = cambiarSeccionEgresos;
 // Función para renderizar gráficos de egresos
 window.renderizarGraficosEgresos = () => {
   actualizarGraficoEgresos();
+  renderizarDesgloseEgresos();
   renderizarGraficoTendencia();
   renderizarGraficoComparativa();
 };

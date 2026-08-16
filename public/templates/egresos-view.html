@@ -1,89 +1,308 @@
 <div id="vista-egresos" data-vista="egresos" class="hidden">
-  <section class="page-header">
+  <section class="page-header expense-page-header">
     <div class="page-header-content">
+      <div class="page-title-row page-title-row--expense">
+        <button
+          type="button"
+          class="btn-back"
+          onclick="window.irAHome()"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+        >
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+        </button>
+
+        <div class="page-title-copy">
+          <span class="page-kicker">Vista analítica</span>
+          <h1 class="section-title">Egresos</h1>
+        </div>
+  </section>
+
+  <nav class="expense-view-switcher" aria-label="Secciones de egresos">
+    <select
+      id="expense-section-select"
+      class="expense-section-select"
+      aria-label="Cambiar sección de egresos"
+      onchange="window.cambiarSeccionEgresos(this.value)"
+    >
+      <option value="resumen">Resumen</option>
+      <option value="categorias">Categorías</option>
+      <option value="tendencias">Tendencias</option>
+    </select>
+
+    <div class="expense-section-tabs" role="tablist" aria-label="Secciones de egresos">
       <button
         type="button"
-        class="btn-back"
-        onclick="window.cambiarVista('home')"
+        class="expense-section-tab active"
+        data-expense-section="resumen"
+        role="tab"
+        aria-selected="true"
+        onclick="window.cambiarSeccionEgresos('resumen')"
       >
-        <i data-lucide="arrow-left"></i>
-        Volver al Panel
+        <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+        <span>Resumen</span>
       </button>
-      <h1 class="section-title">Distribución Detallada de Egresos</h1>
-      <p class="section-subtitle">
-        Análisis porcentual por categorías e historial consolidado.
-      </p>
+      <button
+        type="button"
+        class="expense-section-tab"
+        data-expense-section="categorias"
+        role="tab"
+        aria-selected="false"
+        onclick="window.cambiarSeccionEgresos('categorias')"
+      >
+        <i data-lucide="pie-chart" aria-hidden="true"></i>
+        <span>Categorías</span>
+      </button>
+      <button
+        type="button"
+        class="expense-section-tab"
+        data-expense-section="tendencias"
+        role="tab"
+        aria-selected="false"
+        onclick="window.cambiarSeccionEgresos('tendencias')"
+      >
+        <i data-lucide="activity" aria-hidden="true"></i>
+        <span>Tendencias</span>
+      </button>
+    </div>
+  </nav>
+
+  <section
+    class="expense-section-panel active"
+    data-expense-panel="resumen"
+    aria-label="Resumen de egresos"
+  >
+    <div class="expense-stats">
+      <article class="expense-stat">
+        <div class="expense-stat-icon expense-stat-icon--egreso">
+          <i data-lucide="trending-down" aria-hidden="true"></i>
+        </div>
+
+        <div class="expense-stat-body">
+          <span class="expense-stat-label">Total de egresos</span>
+          <span class="expense-stat-value" id="expense-total">$0.00</span>
+          <span class="expense-stat-sub" id="expense-total-sub">
+            0 movimientos
+          </span>
+        </div>
+      </article>
+
+      <article class="expense-stat">
+        <div class="expense-stat-icon expense-stat-icon--brand">
+          <i data-lucide="pie-chart" aria-hidden="true"></i>
+        </div>
+
+        <div class="expense-stat-body">
+          <span class="expense-stat-label">Categorías activas</span>
+          <span class="expense-stat-value" id="expense-categorias">0</span>
+          <span class="expense-stat-sub" id="expense-categorias-sub">
+            de 10 posibles
+          </span>
+        </div>
+      </article>
+
+      <article class="expense-stat">
+        <div class="expense-stat-icon expense-stat-icon--top">
+          <i data-lucide="bar-chart-3" aria-hidden="true"></i>
+        </div>
+
+        <div class="expense-stat-body">
+          <span class="expense-stat-label">Mayor categoría</span>
+          <span
+            class="expense-stat-value expense-stat-value--sm"
+            id="expense-mayor"
+          >
+            —
+          </span>
+          <span class="expense-stat-sub" id="expense-mayor-sub">—</span>
+        </div>
+      </article>
     </div>
   </section>
-  <div class="expenses-layout">
-    <section class="chart-container">
-      <h3 class="chart-title">Distribución Visual de Egresos</h3>
-      <canvas id="chart-egresos-container" class="chart-canvas"></canvas>
-      <div id="chart-fallback" class="chart-empty">
-        <div class="chart-empty-icon">📊</div>
-        <div class="chart-empty-text">
-          Registra egresos para ver el análisis gráfico.
-        </div>
-      </div>
-    </section>
-    <section class="chart-container">
-      <h3 class="chart-title">Tendencia Mensual (Ingresos vs Egresos)</h3>
-      <div class="chart-wrapper">
-        <canvas id="chart-tendencia" class="chart-canvas"></canvas>
-      </div>
-      <div id="chart-tendencia-fallback" class="chart-empty">
-        <div class="chart-empty-icon">📈</div>
-        <div class="chart-empty-text">
-          Registra movimientos en al menos un mes para ver la tendencia.
-        </div>
-      </div>
-    </section>
-    <section class="chart-container">
-      <h3 class="chart-title">Comparativa de Balance Mensual</h3>
-      <div class="chart-wrapper">
-        <canvas id="chart-comparativa" class="chart-canvas"></canvas>
-      </div>
-      <div id="chart-comparativa-fallback" class="chart-empty">
-        <div class="chart-empty-icon">📊</div>
-        <div class="chart-empty-text">
-          Necesitas datos de al menos 2 meses para la comparativa.
-        </div>
-      </div>
-    </section>
-    <section class="expense-details">
-      <section class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon panel-icon-home">
-              <i data-lucide="home"></i>
-            </div>
-            <span>Hogar y Servicios Básicos</span>
+
+  <section
+    class="expense-section-panel"
+    data-expense-panel="categorias"
+    aria-label="Distribución por categorías"
+    hidden
+  >
+    <div class="expenses-layout expenses-layout--categories">
+      <section
+        class="chart-container chart-container--doughnut"
+        aria-labelledby="chart-egresos-title"
+      >
+        <h2 class="chart-title" id="chart-egresos-title">
+          <i
+            data-lucide="pie-chart"
+            class="chart-title-icon"
+            aria-hidden="true"
+          ></i>
+          Distribución por categoría
+        </h2>
+
+        <div class="chart-doughnut-wrap">
+          <canvas
+            id="chart-egresos-container"
+            class="chart-canvas"
+            role="img"
+            aria-label="Gráfico de distribución de egresos por categoría"
+          ></canvas>
+
+          <div
+            class="chart-doughnut-center"
+            id="chart-egresos-total"
+            aria-hidden="true"
+            hidden
+          >
+            <span class="chart-doughnut-center-label">Total</span>
+            <span class="chart-doughnut-center-value">$0.00</span>
           </div>
         </div>
-        <div id="lista-detalles-hogar" class="detail-list"></div>
-      </section>
-      <section class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon panel-icon-workshop">
-              <i data-lucide="scissors"></i>
-            </div>
-            <span>Taller de Costura</span>
+
+        <div
+          id="chart-fallback"
+          class="chart-empty hidden"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="chart-empty-icon">
+            <i data-lucide="pie-chart" aria-hidden="true"></i>
+          </div>
+
+          <div class="chart-empty-text">
+            Registra egresos para ver el análisis gráfico.
           </div>
         </div>
-        <div id="lista-detalles-taller" class="detail-list"></div>
+
+        <div
+          class="chart-legend"
+          id="chart-egresos-legend"
+          aria-label="Leyenda del gráfico de egresos"
+          hidden
+        ></div>
       </section>
-      <section class="panel">
+
+      <section
+        class="panel expense-breakdown-panel"
+        aria-labelledby="expense-breakdown-title"
+      >
         <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon panel-icon-family">
-              <i data-lucide="users"></i>
-            </div>
-            <span>Familia y Niños</span>
+          <h2 class="panel-title" id="expense-breakdown-title">
+            <i
+              data-lucide="list"
+              class="panel-title-icon"
+              aria-hidden="true"
+            ></i>
+            <span>Desglose por categoría</span>
+          </h2>
+        </div>
+
+        <div
+          id="lista-detalle-egresos"
+          class="expense-breakdown-list"
+          aria-live="polite"
+        ></div>
+
+        <div
+          id="expense-breakdown-empty"
+          class="chart-empty hidden"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="chart-empty-icon">
+            <i data-lucide="pie-chart" aria-hidden="true"></i>
+          </div>
+
+          <div class="chart-empty-text">
+            Registra egresos para ver el desglose por categoría.
           </div>
         </div>
-        <div id="lista-detalles-familia" class="detail-list"></div>
       </section>
-    </section>
-  </div>
+    </div>
+  </section>
+
+  <section
+    class="expense-section-panel"
+    data-expense-panel="tendencias"
+    aria-label="Tendencias de egresos"
+    hidden
+  >
+    <div class="expenses-layout expenses-layout--trends">
+      <section
+        class="chart-container chart-container--full"
+        aria-labelledby="chart-tendencia-title"
+      >
+        <h2 class="chart-title" id="chart-tendencia-title">
+          <i
+            data-lucide="trending-up"
+            class="chart-title-icon"
+            aria-hidden="true"
+          ></i>
+          Tendencia mensual: ingresos vs. egresos
+        </h2>
+
+        <div class="chart-wrapper chart-wrapper--wide">
+          <canvas
+            id="chart-tendencia"
+            class="chart-canvas chart-canvas--wide"
+            role="img"
+            aria-label="Gráfico de tendencia mensual de ingresos y egresos"
+          ></canvas>
+        </div>
+
+        <div
+          id="chart-tendencia-fallback"
+          class="chart-empty hidden"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="chart-empty-icon">
+            <i data-lucide="trending-up" aria-hidden="true"></i>
+          </div>
+
+          <div class="chart-empty-text">
+            Registra movimientos en al menos un mes para ver la tendencia.
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="chart-container chart-container--full"
+        aria-labelledby="chart-comparativa-title"
+      >
+        <h2 class="chart-title" id="chart-comparativa-title">
+          <i
+            data-lucide="bar-chart-3"
+            class="chart-title-icon"
+            aria-hidden="true"
+          ></i>
+          Comparativa del balance mensual
+        </h2>
+
+        <div class="chart-wrapper chart-wrapper--wide">
+          <canvas
+            id="chart-comparativa"
+            class="chart-canvas chart-canvas--wide"
+            role="img"
+            aria-label="Gráfico comparativo del balance mensual"
+          ></canvas>
+        </div>
+
+        <div
+          id="chart-comparativa-fallback"
+          class="chart-empty hidden"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="chart-empty-icon">
+            <i data-lucide="bar-chart-3" aria-hidden="true"></i>
+          </div>
+
+          <div class="chart-empty-text">
+            Necesitas datos de al menos 2 meses para la comparativa.
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
 </div>

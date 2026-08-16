@@ -2,12 +2,14 @@
   <div class="auth-panel-brand">
     <img
       class="auth-panel-logo"
-      src="/src/assets/marca/logo-morelia.svg"
-      alt="Logotipo de Morelia"
+      src="/assets/marca/logo-morelia.svg"
+      alt="Morelia"
     />
   </div>
 
-  <p class="auth-copy auth-copy--brand">Crea tu cuenta o inicia sesión.</p>
+  <p class="auth-copy auth-copy--brand">
+    Crea tu cuenta o inicia sesión.
+  </p>
 
   <form id="auth-login-form" class="auth-form" novalidate>
     <label class="auth-field" for="auth-name">
@@ -33,29 +35,39 @@
         autocomplete="email"
         autocapitalize="none"
         spellcheck="false"
+        maxlength="100"
         required
       />
     </label>
 
     <label class="auth-field" for="auth-country">
       <span>País</span>
-      <select id="auth-country" name="country"></select>
+      <select
+        id="auth-country"
+        name="country"
+        autocomplete="country"
+      >
+        <option value="">Selecciona tu país</option>
+      </select>
     </label>
 
     <label class="auth-field" for="auth-password">
       <span>Contraseña</span>
+
       <div class="password-wrapper">
         <input
           type="password"
           id="auth-password"
           name="password"
-          placeholder="••••"
+          placeholder="••••••••"
           autocomplete="current-password"
           minlength="6"
-          maxlength="128"
+          maxlength="60"
           spellcheck="false"
           required
+          aria-describedby="auth-message"
         />
+
         <button
           type="button"
           class="toggle-password-btn"
@@ -63,12 +75,18 @@
           aria-label="Mostrar contraseña"
           aria-pressed="false"
         >
-          <i data-lucide="eye-off"></i>
+          <i data-lucide="eye-off" aria-hidden="true"></i>
         </button>
       </div>
     </label>
 
-    <p class="auth-message" role="status" aria-live="polite"></p>
+    <p
+      id="auth-message"
+      class="auth-message"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></p>
 
     <div class="auth-actions">
       <button
@@ -78,6 +96,7 @@
       >
         Iniciar sesión
       </button>
+
       <button
         type="button"
         class="auth-btn auth-btn-secondary btn-secondary"
@@ -87,7 +106,11 @@
       </button>
     </div>
 
-    <button type="button" class="auth-recover-btn" data-auth-action="recover">
+    <button
+      type="button"
+      class="auth-recover-btn"
+      data-auth-action="recover"
+    >
       ¿Olvidaste tu contraseña?
     </button>
   </form>

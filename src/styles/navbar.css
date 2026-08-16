@@ -1,0 +1,141 @@
+/* ==========================================================================
+   NAVBAR / HEADER
+   ========================================================================== */
+
+
+/* HEADER / NAVBAR */
+header {
+  border-bottom: 1px solid var(--borde-color);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  background-color: rgba(24, 8, 245, 0.95);
+}
+
+html.dark header {
+  background-color: rgba(233, 235, 239, 0.95);
+}
+
+.navbar-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1rem 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .navbar-container {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+  }
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.navbar-brand-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.navbar-brand-icon {
+  padding: 0.625rem;
+  background-color: var(--color-brand-light);
+  color: var(--color-brand);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-logo,
+.navbar-logo-brand {
+  width: clamp(7rem, 24vw, 12rem);
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  /* "orelia" hereda el color del tema (currentColor en el SVG) */
+  color: var(--texto-principal);
+}
+
+.navbar-brand-wordmark {
+  font-size: 0.52rem; /* mucho más pequeño debajo del logo */
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: white;
+  text-align: center;
+}
+
+.navbar-home-greeting {
+  display: none;
+}
+
+.navbar-brand-text h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.navbar-brand-text p {
+  font-size: 0.75rem;
+  color: var(--texto-atenuado);
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+
+.sync-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgba(251, 146, 60, 0.1);
+  color: #ea580c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+html.dark .sync-badge {
+  background-color: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+  border-color: rgba(251, 146, 60, 0.4);
+}
+
+.sync-badge.synced {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-ingreso);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+html.dark .sync-badge.synced {
+  background-color: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+

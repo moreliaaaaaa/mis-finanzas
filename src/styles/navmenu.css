@@ -1,8 +1,6 @@
 /* ==========================================================================
-   MORELIA — COMPONENTES Y UI
-   Estilo: elegante / moderno / premium
+   MENU LATERAL / DRAWER
    ========================================================================== */
-
 
 /* ==========================================================================
    MENÚ LATERAL
@@ -148,12 +146,12 @@
   width: 2.25rem;
   height: 2.25rem;
 
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  border: 1px solid rgb(243, 244, 246);
   border-radius: 12px;
 
-  background: rgba(241, 245, 249, 0.7);
+  background: rgb(248, 249, 250);
 
-  color: #64748b;
+  color: #fcfdff;
 
   cursor: pointer;
 
@@ -192,7 +190,7 @@
   background:
     linear-gradient(
       135deg,
-      rgba(248, 250, 252, 0.95),
+      rgba(245, 247, 249, 0.95),
       rgba(241, 245, 249, 0.7)
     );
 
@@ -575,267 +573,172 @@ html.dark .dropdown-avatar::after {
   border-color: #111827;
 }
 
-
 /* ==========================================================================
-   BOTÓN INSTALAR PWA
+   DRAWER MORELIA — AJUSTE VISUAL
    ========================================================================== */
 
-.pwa-install-btn {
-  position: fixed;
+.dropdown-menu {
+  width: min(88vw, 350px);
+  padding: 0 0 1.25rem;
+  background: #ffffff;
+  border: 0;
+  border-radius: 0 1.15rem 1.15rem 0;
+  box-shadow:
+    18px 0 42px rgba(15, 23, 42, 0.18),
+    6px 0 18px rgba(15, 23, 42, 0.08);
+}
 
-  right: 1.25rem;
-  bottom: 1.25rem;
+.nav-backdrop {
+  background: rgba(15, 23, 42, 0.38);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
 
-  z-index: 9000;
+.dropdown-header {
+  min-height: 4.85rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.15rem;
+  border-bottom: 0;
+  background:
+    linear-gradient(135deg, rgba(42, 25, 237, 0.95), rgba(28, 69, 169, 0.96)),
+    #2816f4;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
 
+.dropdown-brand {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-
-  gap: 0.55rem;
-
-  min-height: 46px;
-
-  padding: 0.75rem 1.15rem;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-brand),
-      var(--color-brand-hover)
-    );
-
-  color: white;
-
-  font-weight: 700;
-  font-size: 0.82rem;
-
-  border: 1px solid rgba(255, 255, 255, 0.15);
-
-  border-radius: 14px;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 10px 25px rgba(2, 132, 199, 0.28);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    filter 0.2s ease;
+  min-width: 0;
 }
 
-
-.pwa-install-btn:hover {
-  transform: translateY(-3px);
-
-  filter: brightness(1.05);
-
-  box-shadow:
-    0 14px 32px rgba(2, 132, 199, 0.38);
+.dropdown-brand-logo {
+  width: 6.55rem;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
-
-.pwa-install-btn:active {
-  transform: translateY(-1px) scale(0.98);
+.dropdown-close {
+  width: 1.55rem;
+  height: 1.55rem;
+  align-self: center;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 9999px;
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: none;
 }
 
-
-.pwa-install-btn.hidden {
-  display: none;
+.dropdown-close svg {
+  width: 0.82rem;
+  height: 0.82rem;
+  stroke-width: 2.4;
 }
 
+.dropdown-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: none;
+}
 
-/* ==========================================================================
-   CAMBIAR TEMA
-   ========================================================================== */
+.dropdown-links {
+  gap: 0.78rem;
+  padding: 0.8rem 0.75rem 1rem;
+}
 
-#theme-toggle {
-  position: relative;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 2.5rem;
-  height: 2.5rem;
-
-  border-radius: 12px;
-
-  border: 1px solid rgba(148, 163, 184, 0.2);
-
-  background:
-    rgba(255, 255, 255, 0.75);
-
+.dropdown-item {
+  min-height: 3.35rem;
+  gap: 0.85rem;
+  padding: 0.82rem 1rem;
+  border-radius: 0.85rem;
   color: #475569;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 3px 10px rgba(15, 23, 42, 0.05);
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 750;
 }
 
+.dropdown-item i,
+.dropdown-item svg,
+.dropdown-item .asset-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: #64748b;
+}
 
-#theme-toggle:hover {
-  background: #f1f5f9;
+.dropdown-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.12);
+  transform: none;
+}
 
+.dropdown-item:hover i,
+.dropdown-item:hover svg,
+.dropdown-item:hover .asset-icon {
   color: var(--color-brand);
-
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 6px 15px rgba(15, 23, 42, 0.08);
+  transform: none;
 }
 
-
-#theme-toggle:active {
-  transform: scale(0.95);
+.dropdown-item.active,
+.dropdown-item[aria-current="page"] {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-brand-light) 78%, #ffffff),
+      color-mix(in srgb, var(--color-brand-light) 48%, #ffffff)
+    );
+  color: var(--color-brand);
+  border-color: rgba(2, 132, 199, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-
-#theme-toggle .icon-theme-light,
-#theme-toggle .icon-theme-dark {
-  position: absolute;
-
-  inset: 0;
-
-  margin: auto;
-
-  width: 1.1rem;
-  height: 1.1rem;
-
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+.dropdown-item.active::before,
+.dropdown-item[aria-current="page"]::before {
+  left: 0;
+  top: 0.7rem;
+  bottom: 0.7rem;
+  width: 3px;
+  height: auto;
+  border-radius: 0 9999px 9999px 0;
+  transform: none;
+  background: var(--color-brand);
 }
 
-
-html:not(.dark) #theme-toggle .icon-theme-dark {
-  opacity: 0;
-
-  transform: rotate(-45deg) scale(0.6);
+.dropdown-item.active i,
+.dropdown-item.active svg,
+.dropdown-item.active .asset-icon,
+.dropdown-item[aria-current="page"] i,
+.dropdown-item[aria-current="page"] svg,
+.dropdown-item[aria-current="page"] .asset-icon {
+  color: var(--color-brand);
 }
 
-
-html.dark #theme-toggle .icon-theme-light {
-  opacity: 0;
-
-  transform: rotate(45deg) scale(0.6);
+html.dark .dropdown-menu {
+  background: #0f172a;
 }
 
-
-html.dark #theme-toggle {
-  background: rgba(30, 41, 59, 0.8);
-
-  border-color: rgba(255, 255, 255, 0.08);
-
-  color: #cbd5e1;
+html.dark .dropdown-header {
+  background:
+    linear-gradient(135deg, rgba(42, 25, 237, 0.95), rgba(28, 69, 169, 0.96)),
+    #2816f4;
 }
 
-
-html.dark #theme-toggle:hover {
-  background: rgba(51, 65, 85, 0.9);
-
+html.dark .dropdown-item.active,
+html.dark .dropdown-item[aria-current="page"] {
+  background: rgba(14, 165, 233, 0.14);
   color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.2);
 }
 
 
 /* ==========================================================================
-   BOTÓN MENÚ
-   ========================================================================== */
-
-.menu-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 2.5rem;
-  height: 2.5rem;
-
-  border: 1px solid rgba(148, 163, 184, 0.2);
-
-  border-radius: 12px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #f8fafc,
-      #e2e8f0
-    );
-
-  color: #334155;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.08);
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-
-.menu-button:hover:not(:disabled) {
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-brand),
-      var(--color-brand-hover)
-    );
-
-  color: white;
-
-  transform: translateY(-2px);
-
-  border-color: transparent;
-
-  box-shadow:
-    0 8px 20px rgba(2, 132, 199, 0.28);
-}
-
-
-.menu-button:active:not(:disabled) {
-  transform: scale(0.94);
-}
-
-
-.menu-button .asset-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-
-
-/* ==========================================================================
-   ANIMACIONES
-   ========================================================================== */
-
-.animate-fade-in {
-  animation: fadeIn 0.35s ease both;
-}
-
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */

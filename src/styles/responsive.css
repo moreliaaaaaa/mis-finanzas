@@ -2,23 +2,39 @@
    MEDIA QUERIES Y ESTILOS RESPONSIVOS
    ========================================================================== */
 
-/* TABLETAS Y DISPOSITIVOS MEDIANOS (768px) */
+/*
+ * Estrategia:
+ * - Prioridad principal: teléfonos móviles.
+ * - 768px: teléfonos y tablets pequeñas.
+ * - 480px: teléfonos pequeños.
+ * - 360px: pantallas muy estrechas.
+ * - 1024px: tablets y dispositivos medianos.
+ * - 1400px+: pantallas grandes.
+ *
+ * Importante:
+ * Los inputs se mantienen en mínimo 16px en móvil para evitar
+ * el zoom automático de Safari/iOS al recibir foco.
+ */
+
+
+/* ==========================================================================
+   TABLETS Y DISPOSITIVOS MEDIANOS — 1024px
+   ========================================================================== */
+
 @media (max-width: 1024px) {
+
   main {
     padding: 1.5rem 1rem;
   }
 
   .cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
   }
 
-  .layout-grid.two-col {
-    grid-template-columns: 1fr;
-  }
-
+  .layout-grid.two-col,
   .layout-grid.five-seven {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .section-title {
@@ -26,63 +42,231 @@
   }
 }
 
-/* MÓVILES (640px y menos) */
+
+/* ==========================================================================
+   MÓVILES Y TABLETS PEQUEÑAS — 768px
+   ========================================================================== */
+
 @media (max-width: 768px) {
+
+  /* ------------------------------------------------------------------------
+     SEGURIDAD GENERAL CONTRA DESBORDAMIENTOS
+     ------------------------------------------------------------------------ */
+
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  main,
+  section,
+  .panel,
+  .card,
+  .layout-grid,
+  .cards-grid {
+    min-width: 0;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     HEADER / NAVBAR
+     ------------------------------------------------------------------------ */
+
+  header {
+    border-bottom: 0;
+    background-color: var(--color-brand);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  html.dark header {
+    background-color: var(--color-brand);
+  }
+
   .navbar-container {
-    padding: 0.75rem 1rem;
+    display: flex;
     flex-direction: row;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+
+    min-height: 4.5rem;
+
+    padding-top: 0.75rem;
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: 0.75rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+
     gap: 0.75rem;
   }
 
   .navbar-brand {
+    display: flex;
+    justify-content: flex-start;
+
     width: auto;
-    flex: 1;
     min-width: 0;
-    justify-content: center;
+
+    flex: 0 1 auto;
   }
 
   .navbar-logo,
   .navbar-logo-brand {
-    /* Reducir tamaño en móvil para priorizar contenido y evitar que el logo ocupe demasiado espacio */
-    width: clamp(5rem, 30vw, 7.5rem);
+    width: clamp(6.25rem, 29vw, 7.6rem);
+    max-width: 100%;
+  }
+
+  .navbar-brand-wordmark {
+    font-size: 0.5rem;
+    line-height: 1;
+  }
+
+  .navbar-brand-text {
+    min-width: 0;
   }
 
   .navbar-brand-text h1 {
+    margin: 0;
+
     font-size: 1.0625rem;
+    line-height: 1.15;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .navbar-brand-text p {
     display: none;
   }
 
+
+  /* ------------------------------------------------------------------------
+     SALUDO DEL USUARIO
+     ------------------------------------------------------------------------ */
+
+  .navbar-home-greeting {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    flex: 0 1 auto;
+
+    min-width: 0;
+    max-width: 42vw;
+
+    gap: 0.25rem;
+    padding: 0.42rem 0.62rem;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 9999px;
+
+    background-color: rgba(255, 255, 255, 0.1);
+
+    color: rgba(255, 255, 255, 0.8);
+
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+
+    text-align: right;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .navbar-home-greeting span {
+    min-width: 0;
+
+    overflow: hidden;
+
+    color: #ffffff;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     ACCIONES DE NAVBAR
+     ------------------------------------------------------------------------ */
+
   .navbar-actions {
+    display: flex;
+    align-items: center;
+
     width: auto;
-    flex-shrink: 0;
+
+    flex: 0 0 auto;
+
     gap: 0.5rem;
   }
 
-  /* Aumentar targets táctiles y espaciado para mejor uso en móviles */
+  /*
+   * 44 × 44px:
+   * tamaño táctil mínimo cómodo para botones de navegación móvil.
+   */
   .navbar-actions button,
   .navbar-actions .icon-button {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
+    min-width: 44px;
+    min-height: 44px;
+
+    padding: 0.5rem;
+
+    border-radius: 0.625rem;
+
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .navbar-actions .menu-button {
+    background-color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.7);
+
+    color: #475569;
+
+    box-shadow:
+      0 8px 18px rgba(15, 23, 42, 0.18);
+  }
+
+  .navbar-actions .menu-button:hover:not(:disabled) {
+    background-color: #ffffff;
+    color: #1e293b;
+  }
+
+  .navbar-actions .menu-button:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  .navbar-actions .menu-button svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     SINCRONIZACIÓN
+     ------------------------------------------------------------------------ */
+
+  .sync-badge {
+    padding: 0.375rem;
   }
 
   .sync-badge span {
     display: none;
   }
 
-  .sync-badge {
-    padding: 0.375rem;
-  }
+
+  /* ------------------------------------------------------------------------
+     HERO DE PÁGINA
+     ------------------------------------------------------------------------ */
 
   .page-hero {
     padding: 1.25rem;
@@ -90,41 +274,77 @@
 
   .page-hero-title {
     font-size: 1.25rem;
+    line-height: 1.2;
   }
 
+
+  /* ------------------------------------------------------------------------
+     ACCIONES RÁPIDAS
+     ------------------------------------------------------------------------ */
+
   .quick-actions {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.5rem;
   }
 
   .quick-action {
+    min-width: 0;
+
     padding: 0.75rem 0.35rem;
+
+    touch-action: manipulation;
   }
 
   .quick-action-label {
     font-size: 0.6875rem;
+    line-height: 1.2;
+
+    overflow-wrap: anywhere;
   }
+
+
+  /* ------------------------------------------------------------------------
+     CONTENIDO PRINCIPAL
+     ------------------------------------------------------------------------ */
 
   main {
-    padding: 1rem;
+    width: 100%;
+
+    padding-top: 0.5rem;
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: max(1rem, env(safe-area-inset-left));
   }
 
+
+  /* ------------------------------------------------------------------------
+     TARJETAS GENERALES
+     ------------------------------------------------------------------------ */
+
   .cards-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+
     gap: 0.75rem;
     margin-bottom: 1rem;
   }
 
   .card {
     flex-direction: column;
-    text-align: center;
+
+    min-width: 0;
+
     gap: 0.75rem;
+
     padding: 0.875rem;
+
     border-radius: 0.75rem;
+
+    text-align: center;
   }
 
   .card-content {
     width: 100%;
+    min-width: 0;
   }
 
   .card-label {
@@ -132,127 +352,435 @@
   }
 
   .card-amount {
-    font-size: 1.25rem;
     margin-top: 0.25rem;
+
+    font-size: 1.25rem;
+
+    overflow-wrap: anywhere;
   }
 
   .card-icon {
     margin-left: 0;
     margin-bottom: 0;
+
     padding: 0.625rem;
   }
 
+
+  /* ------------------------------------------------------------------------
+     HOME — BIENVENIDA
+     ------------------------------------------------------------------------ */
+
+  .home-welcome {
+    align-items: flex-start;
+
+    margin-bottom: 1.6rem;
+  }
+
+  .home-welcome-text {
+    display: none;
+  }
+
+  .home-period-chip {
+    max-width: 100%;
+
+    padding: 0.5rem 0.9rem;
+
+    border-color: rgba(2, 132, 199, 0.22);
+    border-radius: 9999px;
+
+    background-color: rgba(224, 242, 254, 0.74);
+
+    font-size: 0.74rem;
+    line-height: 1.2;
+
+    white-space: normal;
+
+    box-shadow:
+      0 8px 18px rgba(2, 132, 199, 0.08);
+  }
+
+
+  /* ------------------------------------------------------------------------
+     HOME — BALANCE PRINCIPAL
+     ------------------------------------------------------------------------ */
+
+  .balance-hero {
+    min-height: 7.1rem;
+
+    margin-bottom: 1.4rem;
+    padding: 1.45rem 1.5rem;
+
+    border-radius: 1.15rem;
+
+    background:
+      linear-gradient(
+        135deg,
+        #0788c4 0%,
+        #147aa6 48%,
+        #1f6f92 100%
+      );
+  }
+
+  .balance-hero::before {
+    top: -6rem;
+    right: -2.75rem;
+
+    width: 13rem;
+    height: 13rem;
+  }
+
+  .balance-hero::after {
+    right: 6rem;
+    bottom: -4.6rem;
+
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .balance-hero-eyebrow {
+    margin-bottom: 0.65rem;
+
+    font-size: 0.76rem;
+  }
+
+  .balance-hero-amount {
+    max-width: 100%;
+
+    font-size: clamp(2rem, 10vw, 2.7rem);
+    line-height: 1.05;
+
+    overflow-wrap: anywhere;
+  }
+
+  .balance-hero-badge {
+    display: none;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     HOME — TARJETAS
+     ------------------------------------------------------------------------ */
+
+  .home-cards-grid {
+    gap: 0.95rem;
+  }
+
+  .home-cards-grid .card {
+    justify-content: center;
+
+    min-height: 7.4rem;
+
+    gap: 0.7rem;
+
+    padding: 0.95rem 1rem;
+
+    border-radius: 0.65rem;
+
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .home-cards-grid .card::before {
+    height: 3px;
+
+    border-radius: 0.65rem 0.65rem 0 0;
+  }
+
+  .home-cards-grid .card-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+
+  .home-cards-grid .card-amount {
+    margin-top: 0.35rem;
+
+    font-size: 1.22rem;
+  }
+
+  .home-cards-grid .card-icon {
+    width: 2.55rem;
+    height: 2.55rem;
+
+    padding: 0;
+
+    border-radius: 0.7rem;
+  }
+
+  .home-cards-grid .card-icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     TÍTULOS
+     ------------------------------------------------------------------------ */
+
   .section-title {
     font-size: 1.5rem;
+    line-height: 1.2;
   }
 
   .section-subtitle {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.45;
   }
 
-  .layout-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+
+  /* ------------------------------------------------------------------------
+     LAYOUTS
+     ------------------------------------------------------------------------ */
+
+  .layout-grid,
+  .layout-grid.two-col,
+  .layout-grid.five-seven {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
   }
+
+
+  /* ------------------------------------------------------------------------
+     PANELES
+     ------------------------------------------------------------------------ */
 
   .panel {
+    min-width: 0;
+
     padding: 1rem;
   }
 
   .panel-header {
     flex-direction: column;
     align-items: flex-start;
+
     gap: 0.75rem;
   }
 
   .panel-title {
+    min-width: 0;
+
     font-size: 1rem;
   }
 
   .panel-actions {
     width: 100%;
-    justify-content: stretch;
+
+    justify-content: flex-start;
+
+    gap: 0.5rem;
   }
+
+  .panel-actions > * {
+    min-height: 44px;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     HISTORIAL
+     ------------------------------------------------------------------------ */
 
   .history-item {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns:
+      auto
+      minmax(0, 1fr)
+      auto;
+
     gap: 0.75rem;
+
+    padding: 0.875rem;
   }
 
-  .history-item-content {
-    width: 100%;
+  .history-item > * {
+    min-width: 0;
   }
 
   .history-item-amount {
-    margin: 0;
-    font-size: 1rem;
+    padding: 0.25rem 0.625rem;
+
+    font-size: 0.875rem;
+
+    white-space: nowrap;
   }
 
   .history-item-actions {
-    width: 100%;
+    grid-column: 1 / -1;
+
+    display: flex;
     justify-content: flex-end;
+
     opacity: 1;
+    transform: none;
   }
 
+  .history-item-actions button {
+    min-width: 44px;
+    min-height: 44px;
+
+    touch-action: manipulation;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     FILTROS Y TOGGLES
+     ------------------------------------------------------------------------ */
+
   .btn-toggle-group {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 0.5rem;
+  }
+
+  .btn-toggle,
+  .filter-button {
+    min-height: 44px;
+
+    touch-action: manipulation;
   }
 
   .filter-button {
-    padding: 0.5rem 1rem;
+    padding: 0.625rem 0.875rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     FORMULARIOS
+     ------------------------------------------------------------------------ */
+
+  form {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .form-group {
+    min-width: 0;
+
+    margin-bottom: 0.875rem;
   }
 
   label {
     font-size: 0.8125rem;
   }
 
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    width: 100%;
+    max-width: 100%;
+
+    /*
+     * No bajar de 16px.
+     * Safari iOS puede hacer zoom si el control tiene menos de 16px.
+     */
+    font-size: 16px;
+
+    padding: 0.75rem;
+
+    box-sizing: border-box;
+  }
+
+  input,
+  select,
+  textarea,
   button {
-    font-size: 0.8125rem;
-    padding: 0.5rem 0.875rem;
+    font-family: inherit;
+  }
+
+  select {
+    min-height: 3rem;
+
+    padding-right: 2.75rem;
+  }
+
+  textarea {
+    min-height: 7rem;
+
+    resize: vertical;
   }
 
   .btn-submit {
     width: 100%;
+    min-height: 44px;
+
+    touch-action: manipulation;
   }
 
+
+  /* ------------------------------------------------------------------------
+     GRÁFICOS
+     ------------------------------------------------------------------------ */
+
   .chart-container {
+    min-width: 0;
     min-height: 280px;
+
     padding: 1rem;
+
+    overflow: hidden;
   }
 
   .chart-canvas {
+    width: 100%;
     max-width: 180px;
   }
 
   .chart-legend {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
     gap: 0.75rem;
   }
+
+
+  /* ------------------------------------------------------------------------
+     COMPARACIONES
+     ------------------------------------------------------------------------ */
 
   .comparison-item {
     flex-direction: column;
     align-items: flex-start;
+
     gap: 0.75rem;
   }
 
   .comparison-value {
     width: 100%;
+
     justify-content: space-between;
   }
 
-  /* DISTRIBUCIÓNDE CATEGORÍAS */
+
+  /* ------------------------------------------------------------------------
+     DISTRIBUCIÓN DE CATEGORÍAS
+     ------------------------------------------------------------------------ */
+
   .distribution-radial {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
     gap: 0.75rem;
   }
 
   .distribution-item {
+    min-width: 0;
+
     padding: 0.75rem;
   }
 
   .distribution-item-value {
     font-size: 1.25rem;
+
+    overflow-wrap: anywhere;
   }
 
   .distribution-item-label {
@@ -263,130 +791,178 @@
     font-size: 0.75rem;
   }
 
-  /* RESPONSIVE TABLAS */
+
+  /* ------------------------------------------------------------------------
+     TABLAS
+     ------------------------------------------------------------------------ */
+
   .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  table {
-    font-size: 0.75rem;
     width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: thin;
+  }
+
+  .table-responsive table {
+    width: 100%;
+    min-width: 36rem;
+
     border-collapse: collapse;
+
+    font-size: 0.75rem;
   }
 
-  th,
-  td {
-    padding: 0.5rem;
-    text-align: left;
+  .table-responsive th,
+  .table-responsive td {
+    padding: 0.625rem;
+
     border-bottom: 1px solid var(--borde-color);
+
+    text-align: left;
+    white-space: nowrap;
   }
 
-  th {
-    background-color: var(--bg-principal);
-    font-weight: 600;
+  .table-responsive th {
     position: sticky;
     top: 0;
+    z-index: 1;
+
+    background-color: var(--bg-principal);
+
+    font-weight: 600;
   }
 
-  /* FORMS EN MÓVIL */
-  form {
-    width: 100%;
-  }
 
-  .form-group {
-    margin-bottom: 0.75rem;
-  }
+  /* ------------------------------------------------------------------------
+     MODALES
+     ------------------------------------------------------------------------ */
 
-  input[type="text"],
-  input[type="email"],
-  input[type="number"],
-  input[type="date"],
-  select,
-  textarea {
-    font-size: 16px; /* Previene zoom automático en iOS */
-    padding: 0.75rem;
-  }
-
-  select {
-    min-height: 3rem;
-    padding-right: 2.75rem;
-  }
-
-  /* MODAL EN MÓVIL */
   .modal {
-    width: 95%;
-    padding: 1.5rem;
+    width: calc(100% - 2rem);
+    max-width: 32rem;
+    max-height: calc(100dvh - 2rem);
+
+    padding: 1.25rem;
+
+    overflow-y: auto;
+
+    overscroll-behavior: contain;
   }
 
   .modal-title {
     font-size: 1.125rem;
+    line-height: 1.25;
   }
 
-  /* TOAST EN MÓVIL */
+
+  /* ------------------------------------------------------------------------
+     TOASTS
+     ------------------------------------------------------------------------ */
+
   #toast-container {
-    bottom: 1rem;
-    right: 1rem;
-    left: 1rem;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    left: max(1rem, env(safe-area-inset-left));
   }
 
   .toast {
-    max-width: none;
     width: 100%;
+    max-width: none;
+
     font-size: 0.8125rem;
-  }
-
-  /* ORIENTACIÓN HORIZONTAL MÓVIL */
-  @media (max-width: 640px) and (orientation: landscape) {
-    main {
-      padding: 0.75rem;
-    }
-
-    .section-title {
-      font-size: 1.25rem;
-    }
-
-    .cards-grid {
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .layout-grid {
-      gap: 1rem;
-    }
-
-    .panel {
-      padding: 0.75rem;
-    }
-
-    .history-list {
-      max-height: 150px;
-    }
   }
 }
 
-/* MÓVILES PEQUEÑOS (menos de 480px) */
+
+/* ==========================================================================
+   MÓVILES PEQUEÑOS — 480px
+   ========================================================================== */
+
 @media (max-width: 480px) {
+
+  /* ------------------------------------------------------------------------
+     NAVBAR
+     ------------------------------------------------------------------------ */
+
+  .navbar-container {
+    min-height: 4.25rem;
+
+    gap: 0.5rem;
+
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .navbar-logo,
+  .navbar-logo-brand {
+    width: clamp(5.75rem, 28vw, 6.75rem);
+  }
+
   .navbar-brand-text h1 {
     font-size: 1rem;
   }
 
-  .navbar-brand-text p {
-    font-size: 0.625rem;
+  .navbar-home-greeting {
+    max-width: 34vw;
+
+    padding: 0.38rem 0.5rem;
+
+    font-size: 0.75rem;
+  }
+
+  .navbar-actions {
+    gap: 0.375rem;
   }
 
   .sync-badge {
-    font-size: 0.625rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem;
   }
 
+
+  /* ------------------------------------------------------------------------
+     CONTENIDO
+     ------------------------------------------------------------------------ */
+
+  main {
+    padding-top: 0.5rem;
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+
+  /* ------------------------------------------------------------------------
+     ACCIONES RÁPIDAS
+     ------------------------------------------------------------------------ */
+
+  .quick-actions {
+    /*
+     * En teléfonos pequeños 3 columnas pueden quedar demasiado estrechas.
+     */
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 0.5rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     TARJETAS
+     ------------------------------------------------------------------------ */
+
   .card {
-    padding: 0.75rem;
     gap: 0.625rem;
+
+    padding: 0.75rem;
   }
 
   .card-label {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
   }
 
   .card-amount {
@@ -397,51 +973,286 @@
     padding: 0.5rem;
   }
 
+
+  /* ------------------------------------------------------------------------
+     BALANCE
+     ------------------------------------------------------------------------ */
+
+  .balance-hero {
+    min-height: 6.8rem;
+
+    padding: 1.25rem;
+
+    border-radius: 1rem;
+  }
+
+  .balance-hero-amount {
+    font-size: clamp(1.85rem, 10vw, 2.35rem);
+  }
+
+
+  /* ------------------------------------------------------------------------
+     TÍTULOS
+     ------------------------------------------------------------------------ */
+
   .section-title {
     font-size: 1.25rem;
   }
 
+  .section-subtitle {
+    font-size: 0.78rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     PANELES
+     ------------------------------------------------------------------------ */
+
+  .panel {
+    padding: 0.875rem;
+  }
+
+  .panel-header {
+    margin-bottom: 1rem;
+  }
+
+  .panel-actions {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .panel-actions > * {
+    width: 100%;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     BOTONES Y FILTROS
+     ------------------------------------------------------------------------ */
+
   .btn-toggle {
+    min-height: 44px;
+
+    padding: 0.625rem 0.75rem;
+
     font-size: 0.75rem;
-    padding: 0.5rem 0.75rem;
   }
 
   .filter-button {
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
-  }
+    min-height: 44px;
 
-  input[type="text"],
-  input[type="email"],
-  input[type="number"],
-  input[type="date"],
-  select,
-  textarea {
-    padding: 0.625rem;
-    font-size: 14px;
-  }
+    padding: 0.625rem 0.75rem;
 
-  .history-item-description {
     font-size: 0.75rem;
   }
 
-  .history-item-date {
-    font-size: 0.625rem;
+
+  /* ------------------------------------------------------------------------
+     FORMULARIOS
+     ------------------------------------------------------------------------ */
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    /*
+     * IMPORTANTE:
+     * Se conserva 16px incluso en teléfonos pequeños.
+     */
+    font-size: 16px;
+
+    padding: 0.75rem;
   }
+
+  select {
+    min-height: 3rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     HISTORIAL
+     ------------------------------------------------------------------------ */
+
+  .history-item {
+    gap: 0.625rem;
+
+    padding: 0.75rem;
+  }
+
+  .history-item-description {
+    font-size: 0.78rem;
+  }
+
+  .history-item-date {
+    font-size: 0.68rem;
+  }
+
+  .history-item-amount {
+    font-size: 0.8rem;
+  }
+
+
+  /* ------------------------------------------------------------------------
+     COMPARACIONES
+     ------------------------------------------------------------------------ */
 
   .comparison-item {
     padding: 0.75rem;
   }
 
+
+  /* ------------------------------------------------------------------------
+     DISTRIBUCIÓN
+     ------------------------------------------------------------------------ */
+
   .distribution-radial {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+
+  /* ------------------------------------------------------------------------
+     GRÁFICOS
+     ------------------------------------------------------------------------ */
+
+  .chart-legend {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+
+  /* ------------------------------------------------------------------------
+     MODALES
+     ------------------------------------------------------------------------ */
+
+  .modal {
+    width: calc(100% - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+
+    padding: 1rem;
+
+    border-radius: 1rem;
   }
 }
 
-/* PANTALLAS MUY GRANDES (1400px+) */
+
+/* ==========================================================================
+   TELÉFONOS MUY PEQUEÑOS — 360px
+   ========================================================================== */
+
+@media (max-width: 360px) {
+
+  /*
+   * En pantallas extremadamente estrechas priorizamos
+   * navegación y botones sobre información secundaria.
+   */
+
+  .navbar-home-greeting {
+    display: none;
+  }
+
+  .navbar-logo,
+  .navbar-logo-brand {
+    width: 6rem;
+  }
+
+  .navbar-actions {
+    margin-left: auto;
+  }
+
+  .quick-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .btn-toggle-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .history-item {
+    grid-template-columns:
+      auto
+      minmax(0, 1fr);
+  }
+
+  .history-item-amount {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .history-item-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+
+/* ==========================================================================
+   MÓVIL EN ORIENTACIÓN HORIZONTAL
+   ========================================================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+
+  main {
+    padding-top: 0.75rem;
+  }
+
+  .navbar-container {
+    min-height: 4rem;
+
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+  }
+
+  .cards-grid {
+    gap: 0.75rem;
+
+    margin-bottom: 1rem;
+  }
+
+  .layout-grid {
+    gap: 1rem;
+  }
+
+  .panel {
+    padding: 0.75rem;
+  }
+
+  .history-list {
+    max-height: 12rem;
+
+    overflow-y: auto;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 1rem);
+  }
+}
+
+
+/* ==========================================================================
+   PANTALLAS GRANDES — 1400px+
+   ========================================================================== */
+
 @media (min-width: 1400px) {
+
   main {
     max-width: 1280px;
+
+    margin-inline: auto;
+
     padding: 3rem 1.5rem;
   }
 
@@ -459,6 +1270,7 @@
 
   .chart-container {
     min-height: 420px;
+
     padding: 2rem;
   }
 
@@ -471,52 +1283,80 @@
   }
 }
 
-/* DARK MODE - AJUSTES RESPONSIVOS */
-html.dark {
-  /* Los colores ya están definidos en main.css */
-}
 
-/* PREFERENCIAS DE USUARIO */
+/* ==========================================================================
+   PREFERENCIAS DE MOVIMIENTO
+   ========================================================================== */
+
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
+    scroll-behavior: auto !important;
+
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
   }
 }
 
+
+/* ==========================================================================
+   MODO OSCURO SEGÚN PREFERENCIA DEL SISTEMA
+   ========================================================================== */
+
+/*
+ * Esto solo ajusta la superficie HTML.
+ * El tema real continúa controlándose con tus variables
+ * y la clase html.dark.
+ */
+
 @media (prefers-color-scheme: dark) {
-  html:not(.light) {
+
+  html.dark {
     background-color: var(--bg-principal);
     color: var(--texto-principal);
   }
 }
 
-/* PRINT STYLES */
+
+/* ==========================================================================
+   IMPRESIÓN
+   ========================================================================== */
+
 @media print {
+
   header,
   footer,
   .btn-toggle,
   .filter-button,
   .panel-actions,
   .history-item-actions {
-    display: none;
+    display: none !important;
   }
 
+  html,
   body {
-    background-color: white;
-    color: black;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 
   main {
+    max-width: none;
+
     padding: 0;
   }
 
   .card,
   .panel {
+    border: 1px solid #000000;
+
+    box-shadow: none;
+
+    break-inside: avoid;
     page-break-inside: avoid;
-    border: 1px solid #000;
   }
 }

@@ -7,11 +7,13 @@ import { getState, setState } from "../state.js";
 import { guardarEnStorage, obtenerDelStorage, eliminarDelStorage, definirAlcanceStorage } from "../storage.js";
 import { mostrarToast, initializarIconos } from "../ui.js";
 import { getSupabaseClient } from "../supabase.js";
+import { recalcularYRenderizar } from "./dashboard.js";
 
 const STORAGE_USERS = "misfinanzas_users";
 const STORAGE_SESSION = "misfinanzas_session";
 
 let ultimoErrorAuth = null;
+let ultimoTipoMensajeAuth = "";
 
 const ERRORES_TRADUCIDOS = [
   { regex: /invalid login credentials|invalid_grant|invalid_credentials/i, msg: "Correo o contraseña incorrectos." },
@@ -25,6 +27,19 @@ function traducirErrorAuth(error) {
     error?.message || error?.msg || error?.error_description || "Credenciales incorrectas";
   const coincidencia = ERRORES_TRADUCIDOS.find(({ regex }) => regex.test(mensajeOriginal));
   return coincidencia ? coincidencia.msg : mensajeOriginal;
+}
+
+function normalizarEmail(email = "") {
+  return email.trim().toLowerCase();
+}
+
+function obtenerRedirectAuth() {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
+function esErrorEmailNoConfirmado(error) {
+  const mensaje = `${error?.message || ""} ${error?.code || ""} ${error?.name || ""}`;
+  return /email not confirmed|email_not_confirmed/i.test(mensaje);
 }
 const COUNTRY_OPTIONS = [
   { code: "AR", label: "Argentina", currency: "ARS", language: "es", locale: "es-AR" },
@@ -199,9 +214,10 @@ export async function registrarUsuario(nombre, email, password, country = "CL") 
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
+      email: normalizarEmail(email),
       password,
       options: {
+        emailRedirectTo: obtenerRedirectAuth(),
         data: {
           nombre: nombre.trim(),
           name: nombre.trim(),
@@ -224,13 +240,15 @@ export async function registrarUsuario(nombre, email, password, country = "CL") 
     }
 
     if (!data?.session && (user.identities?.length ?? 1) === 0) {
-      ultimoErrorAuth = "Este correo ya está registrado. Inicia sesión o usa ¿Olvidaste tu contraseña?";
+      ultimoErrorAuth = "Si este correo ya estaba registrado, inicia sesión o recupera tu contraseña.";
+      ultimoTipoMensajeAuth = "error";
       mostrarToast("error", ultimoErrorAuth);
       return false;
     }
 
     if (!data?.session) {
-      ultimoErrorAuth = "Revisa tu correo para confirmar la cuenta y luego inicia sesión.";
+      ultimoErrorAuth = "Te enviamos un correo de confirmación. Revisa tu bandeja y spam antes de iniciar sesión.";
+      ultimoTipoMensajeAuth = "success";
       mostrarToast("success", ultimoErrorAuth);
       return false;
     }
@@ -252,7 +270,7 @@ export async function registrarUsuario(nombre, email, password, country = "CL") 
 
 async function registrarUsuarioLocal(nombre, email, password, country = "CL") {
   const users = obtenerDelStorage(STORAGE_USERS) || {};
-  const emailNormalizado = email.trim().toLowerCase();
+  const emailNormalizado = normalizarEmail(email);
   const emailEnUso = Object.values(users).some((user) => user.email === emailNormalizado);
   const countryConfig = getCountryConfig(country);
 
@@ -280,7 +298,7 @@ async function registrarUsuarioLocal(nombre, email, password, country = "CL") {
   users[userId] = user;
   guardarEnStorage(STORAGE_USERS, users);
   guardarSesionAuth({ userId, userName: user.nombre, userEmail: user.email });
-  mostrarToast("success", `Cuenta creada para ${user.nombre || user.email}`);
+  mostrarToast("success", `Cuenta local creada para ${user.nombre || user.email}`);
   return true;
 }
 
@@ -297,7 +315,7 @@ export async function iniciarSesion(email, password) {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: normalizarEmail(email),
         password,
       });
 
@@ -321,9 +339,14 @@ export async function iniciarSesion(email, password) {
       errorSupabase = error;
     }
 
+    if (esErrorEmailNoConfirmado(errorSupabase)) {
+      await reenviarConfirmacion(email);
+      return false;
+    }
+
     // Respaldo: si la cuenta se creó en modo local (antes de conectar Supabase),
     // el usuario vive en este navegador y no existe en la nube.
-    const emailNormalizado = email.trim().toLowerCase();
+    const emailNormalizado = normalizarEmail(email);
     const userLocal = Object.values(obtenerDelStorage(STORAGE_USERS) || {}).find(
       (item) => item.email === emailNormalizado
     );
@@ -348,16 +371,51 @@ export async function iniciarSesion(email, password) {
   return iniciarSesionLocal(email, password);
 }
 
+async function reenviarConfirmacion(email) {
+  const supabase = getSupabaseClient();
+  const emailNormalizado = normalizarEmail(email);
+
+  if (!supabase || !emailNormalizado) {
+    ultimoErrorAuth = "Debes confirmar tu correo antes de iniciar sesión.";
+    mostrarToast("warning", ultimoErrorAuth);
+    return false;
+  }
+
+  try {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: emailNormalizado,
+      options: {
+        emailRedirectTo: obtenerRedirectAuth(),
+      },
+    });
+
+    if (error) throw error;
+
+    ultimoErrorAuth = "Tu correo aún no está confirmado. Te reenviamos el enlace de confirmación.";
+    ultimoTipoMensajeAuth = "success";
+    mostrarToast("info", ultimoErrorAuth);
+    return true;
+  } catch (error) {
+    ultimoErrorAuth = "Tu correo aún no está confirmado. Revisa el enlace de confirmación o usa recuperar contraseña.";
+    ultimoTipoMensajeAuth = "warning";
+    console.warn("No se pudo reenviar confirmación:", error);
+    mostrarToast("warning", ultimoErrorAuth);
+    return false;
+  }
+}
+
 async function iniciarSesionLocal(email, password) {
   const users = obtenerDelStorage(STORAGE_USERS) || {};
-  const emailNormalizado = email.trim().toLowerCase();
+  const emailNormalizado = normalizarEmail(email);
   const passwordHash = await obtenerPasswordHash(password);
   const user = Object.values(users).find(
     (item) => item.email === emailNormalizado && item.passwordHash === passwordHash
   );
 
   if (!user) {
-    ultimoErrorAuth = "Correo o contraseña incorrectos.";
+    ultimoErrorAuth = "No encontré esa cuenta en este dispositivo. Si la registraste en la nube, revisa que este despliegue tenga las variables de Supabase.";
+    ultimoTipoMensajeAuth = "error";
     mostrarToast("error", ultimoErrorAuth);
     return false;
   }
@@ -368,7 +426,7 @@ async function iniciarSesionLocal(email, password) {
 }
 
 export async function recuperarPassword(email) {
-  const emailNormalizado = email.trim().toLowerCase();
+  const emailNormalizado = normalizarEmail(email);
 
   if (!emailNormalizado) {
     mostrarToast("error", "Escribe tu correo electronico para enviarte el enlace");
@@ -627,6 +685,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
 
     container.querySelector("[data-auth-action='logout']")?.addEventListener("click", async () => {
       cerrarSesion();
+      recalcularYRenderizar();
       await renderizarPanelAuth(containerId);
       if (containerId !== "auth-panel") {
         await renderizarPanelAuth("auth-panel");
@@ -651,7 +710,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
     container.innerHTML = `
       <div class="auth-panel">
         <div class="auth-panel-brand">
-          <img class="auth-panel-logo" src="/src/assets/marca/logo-morelia.svg" alt="Morelia">
+          <img class="auth-panel-logo" src="/assets/marca/logo-morelia.svg" alt="Morelia">
         </div>
         <p class="auth-copy auth-copy--brand">Crea tu cuenta o inicia sesión.</p>
         <form id="${idPrefix}-form" class="auth-form" novalidate>
@@ -672,7 +731,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
             <div class="password-wrapper">
               <input type="password" id="${idPrefix}-password" name="password" placeholder="••••" autocomplete="current-password" minlength="6" maxlength="128" spellcheck="false" required>
               <button type="button" class="toggle-password-btn" data-auth-action="toggle-password" aria-label="Mostrar contraseña" aria-pressed="false">
-                <img src="/src/assets/icons/eye_close.svg" alt="" width="24" height="24">
+                <i data-lucide="eye-off"></i>
               </button>
             </div>
           </label>
@@ -719,6 +778,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
 
   const refreshAuthPanels = () => {
     renderizarPerfil();
+    recalcularYRenderizar();
     window.ocultarLoginScreen?.();
   };
 
@@ -729,6 +789,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
     const country = countryInput?.value || "CL";
 
     ultimoErrorAuth = null;
+    ultimoTipoMensajeAuth = "";
     setLoading(true);
     setMessage(
       action === "signup"
@@ -751,7 +812,10 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
       } else if (ok) {
         setMessage("Te enviamos un correo para recuperar tu contrasena.", "success");
       } else {
-        setMessage(ultimoErrorAuth || "Revisa los datos e intentalo nuevamente.", "error");
+        setMessage(
+          ultimoErrorAuth || "Revisa los datos e intentalo nuevamente.",
+          ultimoTipoMensajeAuth || "error"
+        );
       }
     } finally {
       setLoading(false);
@@ -775,10 +839,6 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
       return;
     }
 
-    const icon = togglePasswordBtn.querySelector("img");
-    if (icon) {
-      icon.src = isVisible ? "/src/assets/icons/eye_close.svg" : "/src/assets/icons/visibility.svg";
-    }
   });
 
   container.querySelector(`#${idPrefix}-form`)?.addEventListener("submit", (event) => {

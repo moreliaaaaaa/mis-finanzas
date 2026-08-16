@@ -1,366 +1,791 @@
 /* ==========================================================================
-   ESTILOS PARA GESTIÓN DE PERIODOS FINANCIEROS
+   INFORMACIÓN DEL PERIODO ACTUAL
    ========================================================================== */
 
-/* Period Info Bar */
 .period-info-bar {
-  background-color: var(--bg-tarjeta);
+  margin-bottom: 1rem;
+  padding: 1rem;
+
+  background: var(--bg-tarjeta);
   border: 1px solid var(--borde-color);
-  border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.25rem;
-  box-shadow: var(--sombra-suave);
+  border-radius: 0.875rem;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 4px 14px rgba(15, 23, 42, 0.04);
 }
+
 
 .period-info-content {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
 }
+
+
+/* Fechas */
 
 .period-dates {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
 }
+
 
 .period-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  margin: 0;
+
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.2;
+
   color: var(--texto-atenuado);
+
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.065em;
 }
 
+
 .period-dates strong {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.4;
+
   color: var(--texto-principal);
 }
 
+
+/* Estado del periodo */
+
 .period-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
+
+  width: fit-content;
+
+  padding: 0.3rem 0.6rem;
+
+  border: 1px solid transparent;
+  border-radius: 999px;
+
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1;
+
+  white-space: nowrap;
 }
+
 
 .period-badge-positive {
-  background-color: var(--color-ingreso-bg);
   color: var(--color-ingreso);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--color-ingreso-bg);
+  border-color: rgba(16, 185, 129, 0.18);
 }
 
+
 .period-badge-negative {
-  background-color: var(--color-egreso-bg);
   color: var(--color-egreso);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-egreso-bg);
+  border-color: rgba(239, 68, 68, 0.18);
 }
+
+
+/* ==========================================================================
+   ACCIONES DEL PERIODO
+   ========================================================================== */
 
 .period-actions {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+
+  width: 100%;
 }
+
 
 .period-day-config {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  width: 100%;
 }
+
 
 .period-day-label {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 550;
+  line-height: 1.3;
+
   color: var(--texto-secundario);
-  white-space: nowrap;
 }
+
 
 .period-day-input {
-  width: 60px;
-  padding: 0.35rem 0.5rem;
+  width: 3.5rem;
+  min-height: 2.5rem;
+
+  padding: 0.45rem 0.5rem;
+
+  background: var(--bg-principal);
   border: 1px solid var(--borde-color);
-  border-radius: 0.5rem;
-  background-color: var(--bg-principal);
+  border-radius: 0.625rem;
+
   color: var(--texto-principal);
-  font-size: 0.85rem;
+
+  font: inherit;
+  font-size: 0.875rem;
   font-weight: 600;
+  line-height: 1;
+
   text-align: center;
-  transition: border-color 0.2s ease;
+
+  outline: none;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
 }
 
-.period-day-input:focus {
-  outline: none;
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+
+.period-day-input:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--color-brand) 35%,
+    var(--borde-color)
+  );
 }
+
+
+.period-day-input:focus-visible {
+  border-color: var(--color-brand);
+
+  box-shadow:
+    0 0 0 3px color-mix(
+      in srgb,
+      var(--color-brand) 14%,
+      transparent
+    );
+}
+
+
+/* ==========================================================================
+   BOTÓN CERRAR PERIODO
+   ========================================================================== */
 
 .btn-period-close {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 700;
+  justify-content: center;
+  gap: 0.45rem;
+
+  width: 100%;
+  min-height: 2.75rem;
+
+  padding: 0.7rem 1rem;
+
+  background: var(--color-brand);
+  border: 1px solid var(--color-brand);
+  border-radius: 0.7rem;
+
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.2;
+
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
 }
+
 
 .btn-period-close:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
-  background: linear-gradient(135deg, #0369a1, #0284c7);
+  background: color-mix(
+    in srgb,
+    var(--color-brand) 88%,
+    #000000
+  );
+
+  border-color: color-mix(
+    in srgb,
+    var(--color-brand) 88%,
+    #000000
+  );
+
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.11);
 }
+
 
 .btn-period-close:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
+
+
+.btn-period-close:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px color-mix(
+      in srgb,
+      var(--color-brand) 18%,
+      transparent
+    );
+}
+
 
 .btn-period-close:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+
   transform: none;
+  box-shadow: none;
 }
 
-/* Period Cards (Savings & Debt) */
+
+.btn-period-close svg {
+  width: 1rem;
+  height: 1rem;
+
+  stroke-width: 2;
+}
+
+
+/* ==========================================================================
+   TARJETAS DE AHORRO Y DEUDA
+   ========================================================================== */
+
 .period-cards-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+
+  margin-bottom: 1rem;
+}
+
+
+.period-card {
+  min-width: 0;
+  padding: 1rem;
+
+  background: var(--bg-tarjeta);
+  border: 1px solid var(--borde-color);
+  border-radius: 0.875rem;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 4px 12px rgba(15, 23, 42, 0.035);
+}
+
+
+/* Ahorro */
+
+.ahorro-card .card-content .card-label {
+  color: var(--texto-secundario);
+}
+
+
+.ahorro-card .card-content .card-amount {
+  color: var(--texto-principal);
+}
+
+
+.ahorro-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.75rem;
+  height: 2.75rem;
+
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(16, 185, 129, 0.14);
+  border-radius: 0.7rem;
+
+  background: var(--color-ingreso-bg) !important;
+  color: var(--color-ingreso);
+
+  font-size: 1.25rem;
+}
+
+
+/* Deuda */
+
+.deuda-card .card-content .card-label {
+  color: var(--texto-secundario);
+}
+
+
+.deuda-card .card-content .card-amount {
+  color: var(--texto-principal);
+}
+
+
+.deuda-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.75rem;
+  height: 2.75rem;
+
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(239, 68, 68, 0.14);
+  border-radius: 0.7rem;
+
+  background: var(--color-egreso-bg) !important;
+  color: var(--color-egreso);
+
+  font-size: 1.25rem;
+}
+
+
+.ahorro-icon svg,
+.deuda-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+
+  stroke-width: 1.8;
+}
+
+
+/* ==========================================================================
+   HISTORIAL DE PERIODOS
+   ========================================================================== */
+
+.period-history-section {
   margin-bottom: 1.25rem;
 }
 
-.period-card {
-  padding: 1.5rem;
-}
-
-.ahorro-card .card-content .card-label {
-  color: var(--color-ingreso);
-}
-
-.ahorro-card .card-content .card-amount {
-  color: var(--color-ingreso);
-}
-
-.ahorro-icon {
-  background-color: var(--color-ingreso-bg) !important;
-  font-size: 2rem;
-  width: 4rem;
-  height: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.75rem;
-}
-
-.deuda-card .card-content .card-label {
-  color: var(--color-egreso);
-}
-
-.deuda-card .card-content .card-amount {
-  color: var(--color-egreso);
-}
-
-.deuda-icon {
-  background-color: var(--color-egreso-bg) !important;
-  font-size: 2rem;
-  width: 4rem;
-  height: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.75rem;
-}
-
-/* Period History Section */
-.period-history-section {
-  margin-bottom: 1.5rem;
-}
 
 .period-history-details {
-  background-color: var(--bg-tarjeta);
-  border: 1px solid var(--borde-color);
-  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: var(--sombra-suave);
+
+  background: var(--bg-tarjeta);
+  border: 1px solid var(--borde-color);
+  border-radius: 0.875rem;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.025),
+    0 4px 12px rgba(15, 23, 42, 0.03);
 }
 
+
+/* Cabecera desplegable */
+
 .period-history-summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.95rem;
+  gap: 0.65rem;
+
+  min-height: 3.25rem;
+  padding: 0.8rem 1rem;
+
   color: var(--texto-principal);
-  transition: background-color 0.2s ease;
+
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.3;
+
+  cursor: pointer;
+  list-style: none;
+
   -webkit-user-select: none;
   user-select: none;
-  list-style: none;
+
+  transition: background-color 0.18s ease;
 }
+
 
 .period-history-summary::-webkit-details-marker {
   display: none;
 }
 
-.period-history-summary:hover {
-  background-color: var(--bg-principal);
-}
 
 .period-history-summary::before {
-  content: "▶";
-  font-size: 0.7rem;
-  margin-right: 0.75rem;
+  content: "";
+
+  width: 0.45rem;
+  height: 0.45rem;
+
+  border-right: 1.5px solid var(--texto-atenuado);
+  border-bottom: 1.5px solid var(--texto-atenuado);
+
+  transform: rotate(-45deg);
+
   transition: transform 0.2s ease;
-  color: var(--texto-atenuado);
 }
 
-details[open] .period-history-summary::before {
-  transform: rotate(90deg);
+
+.period-history-details[open]
+.period-history-summary::before {
+  transform: rotate(45deg);
 }
+
+
+.period-history-summary:hover {
+  background: var(--bg-principal);
+}
+
+
+.period-history-summary:focus-visible {
+  outline: none;
+
+  box-shadow:
+    inset 0 0 0 2px color-mix(
+      in srgb,
+      var(--color-brand) 30%,
+      transparent
+    );
+}
+
 
 .period-history-count {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--texto-atenuado);
-  background-color: var(--bg-principal);
-  padding: 0.2rem 0.65rem;
-  border-radius: 9999px;
-}
-
-.period-history-list {
-  padding: 0 1.25rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.period-history-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.6rem;
-  background-color: var(--bg-principal);
-  border: 1px solid var(--borde-color);
-  transition: border-color 0.2s ease;
-}
-
-.period-history-item:hover {
-  border-color: var(--color-brand);
-}
-
-.period-history-info {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.period-history-icon {
-  font-size: 1.1rem;
-  flex-shrink: 0;
-  width: 1.75rem;
-  height: 1.75rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-tarjeta);
-  border-radius: 0.4rem;
-}
 
-.period-history-dates {
-  font-size: 0.8rem;
+  min-width: 1.75rem;
+
+  padding: 0.2rem 0.5rem;
+
+  background: var(--bg-principal);
+  border: 1px solid var(--borde-color);
+  border-radius: 999px;
+
+  color: var(--texto-atenuado);
+
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--texto-principal);
+  line-height: 1.2;
+
   white-space: nowrap;
 }
 
-.period-history-label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--texto-atenuado);
-  background-color: var(--bg-tarjeta);
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
+
+/* ==========================================================================
+   LISTA DEL HISTORIAL
+   ========================================================================== */
+
+.period-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  padding: 0 1rem 0.8rem;
 }
 
-.period-history-amount {
-  font-size: 0.85rem;
-  font-weight: 700;
-  flex-shrink: 0;
+
+.period-history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+
+  min-width: 0;
+
+  padding: 0.8rem 0;
+
+  border-top: 1px solid var(--borde-color);
+
+  transition: background-color 0.18s ease;
 }
+
+
+.period-history-item:first-child {
+  border-top: 0;
+}
+
+
+.period-history-info {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+
+  min-width: 0;
+}
+
+
+.period-history-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2rem;
+  height: 2rem;
+
+  flex: 0 0 auto;
+
+  background: var(--bg-principal);
+  border: 1px solid var(--borde-color);
+  border-radius: 0.55rem;
+
+  color: var(--texto-secundario);
+
+  font-size: 0.95rem;
+}
+
+
+.period-history-icon svg {
+  width: 1rem;
+  height: 1rem;
+
+  stroke-width: 1.8;
+}
+
+
+.period-history-dates {
+  display: block;
+
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  color: var(--texto-principal);
+
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+
+  white-space: nowrap;
+}
+
+
+.period-history-label {
+  display: inline-flex;
+  width: fit-content;
+
+  margin-top: 0.15rem;
+  padding: 0;
+
+  background: transparent;
+
+  color: var(--texto-atenuado);
+
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+
+.period-history-amount {
+  flex: 0 0 auto;
+
+  color: var(--texto-principal);
+
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.3;
+
+  text-align: right;
+  white-space: nowrap;
+}
+
+
+/* Estado vacío */
 
 .period-empty {
   padding: 1.5rem 1rem;
+
+  color: var(--texto-atenuado);
+
+  font-size: 0.8125rem;
+  line-height: 1.5;
+
+  text-align: center;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+
+.period-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2.25rem;
+  height: 2.25rem;
+
+  margin: 0 auto 0.6rem;
+
+  color: var(--texto-atenuado);
+}
+
+
+.period-empty-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+
+  stroke-width: 1.7;
+}
+
+
+/* ==========================================================================
+   TABLET
+   ========================================================================== */
+
+@media (min-width: 641px) {
+
+  .period-info-bar {
+    padding: 1.15rem 1.25rem;
+  }
+
+
   .period-info-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .period-actions {
-    width: 100%;
+    flex-direction: row;
+    align-items: center;
     justify-content: space-between;
+    gap: 1.25rem;
   }
 
-  .period-cards-row {
-    grid-template-columns: 1fr;
-  }
 
   .period-dates {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.65rem;
   }
 
-  .period-history-info {
-    flex-wrap: wrap;
+
+  .period-actions {
+    width: auto;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
   }
+
+
+  .period-day-config {
+    width: auto;
+    justify-content: flex-start;
+  }
+
 
   .btn-period-close {
-    width: 100%;
-    justify-content: center;
+    width: auto;
+    min-width: max-content;
   }
-}
 
-@media (min-width: 641px) and (max-width: 900px) {
+
   .period-cards-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 1rem;
+  }
+
+
+  .period-card {
+    padding: 1.25rem;
+  }
+
+
+  .period-history-list {
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+  }
+
+
+  .period-history-summary {
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
   }
 }
 
-/* Dark mode adjustments */
-html.dark .ahorro-icon {
-  background-color: rgba(16, 185, 129, 0.15) !important;
+
+/* ==========================================================================
+   ESCRITORIO
+   ========================================================================== */
+
+@media (min-width: 901px) {
+
+  .period-info-bar {
+    padding: 1.25rem 1.5rem;
+  }
+
+
+  .period-cards-row {
+    gap: 1.25rem;
+  }
+
+
+  .period-card {
+    padding: 1.4rem;
+  }
+
+
+  .period-history-item:hover {
+    background: color-mix(
+      in srgb,
+      var(--bg-principal) 55%,
+      transparent
+    );
+  }
 }
+
+
+/* ==========================================================================
+   MODO OSCURO
+   ========================================================================== */
+
+html.dark .period-info-bar,
+html.dark .period-card,
+html.dark .period-history-details {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.15),
+    0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+html.dark .ahorro-icon {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.16);
+}
+
 
 html.dark .deuda-icon {
-  background-color: rgba(239, 68, 68, 0.15) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.16);
 }
 
-html.dark .btn-period-close {
-  background: linear-gradient(135deg, #0284c7, #075985);
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-}
 
-html.dark .btn-period-close:hover {
-  background: linear-gradient(135deg, #0369a1, #0284c7);
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
-}
+/* ==========================================================================
+   ACCESIBILIDAD / REDUCCIÓN DE MOVIMIENTO
+   ========================================================================== */
 
+@media (prefers-reduced-motion: reduce) {
+
+  .period-day-input,
+  .btn-period-close,
+  .period-history-summary,
+  .period-history-summary::before,
+  .period-history-item {
+    transition: none;
+  }
+
+
+  .btn-period-close:hover,
+  .btn-period-close:active {
+    transform: none;
+  }
+}

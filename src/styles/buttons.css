@@ -1,0 +1,249 @@
+/* ==========================================================================
+   BOTONES
+   ========================================================================== */
+
+
+/* BOTONES GENERALES */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* BOTÓN PRIMARIO (Brand) */
+.btn-primary,
+.btn-submit {
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-hover));
+  color: white;
+  padding: 0.8125rem 1.25rem;
+  font-weight: 700;
+  border-radius: 0.625rem;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-submit:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* BOTÓN SECUNDARIO */
+.btn-secondary,
+.btn-cancel {
+  background-color: var(--bg-tarjeta);
+  color: var(--texto-principal);
+  border: 1px solid var(--borde-color);
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-cancel:hover:not(:disabled) {
+  background-color: var(--color-brand-light);
+  border-color: var(--color-brand);
+}
+
+/* BOTÓN PELIGRO */
+.btn-danger {
+  background-color: var(--color-egreso);
+  color: white;
+  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15);
+}
+
+/* BOTÓN ÉXITO */
+.btn-success {
+  background-color: var(--color-ingreso);
+  color: white;
+  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #059669;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15);
+}
+
+/* BOTÓN CON ICONO SOLO */
+.btn-icon {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: transparent;
+  color: var(--texto-secundario);
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background-color: var(--color-brand-light);
+  color: var(--color-brand);
+}
+
+/* SELECTOR DE TIPO (Toggle Buttons) */
+.btn-toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.btn-toggle {
+  min-height: 4.5rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--borde-color);
+  background-color: var(--bg-principal);
+  color: var(--texto-principal);
+  border-radius: 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  text-align: left;
+}
+
+.btn-toggle:hover:not(.active) {
+  background-color: var(--bg-tarjeta);
+  border-color: var(--texto-atenuado);
+}
+
+.btn-toggle.active {
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.08);
+  transform: translateY(-1px);
+}
+
+.btn-toggle > svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+}
+
+.btn-toggle-content {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.btn-toggle-content strong {
+  font-size: 0.9rem;
+}
+
+.btn-toggle-content small,
+.tipo-ayuda {
+  color: var(--texto-secundario);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.tipo-ayuda {
+  margin-top: 0.6rem;
+}
+
+.tipo-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texto-principal);
+}
+
+/* Estilo destacado para Ingresos */
+.btn-toggle.active.ingreso {
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.12),
+    rgba(5, 150, 105, 0.18)
+  );
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #047857;
+}
+
+/* Estilo destacado para Egresos */
+.btn-toggle.active.egreso {
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.12),
+    rgba(220, 38, 38, 0.18)
+  );
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.btn-toggle.active.ingreso small {
+  color: #059669;
+}
+
+.btn-toggle.active.egreso small {
+  color: #dc2626;
+}
+
+.btn-toggle:focus-visible {
+  outline: 3px solid rgba(2, 132, 199, 0.28);
+  outline-offset: 2px;
+}
+
+
+/* Estados del botón de envío según tipo de movimiento */
+.btn-primary.btn-ingreso {
+  background-color: #10b981;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.12);
+}
+.btn-primary.btn-ingreso:hover:not(:disabled) {
+  background-color: #059669;
+}
+.btn-primary.btn-egreso {
+  background-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.12);
+}
+.btn-primary.btn-egreso:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+/* BOTÓN CON SPINNER DE CARGANDO */
+.btn-primary[data-loading="true"],
+.btn-submit[data-loading="true"] {
+  pointer-events: none;
+  position: relative;
+}
+
+.btn-primary[data-loading="true"]::before,
+.btn-submit[data-loading="true"]::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

@@ -1,0 +1,412 @@
+/* ==========================================================================
+   INICIO - VISTA PRINCIPAL
+   ========================================================================== */
+
+/* ==========================================================================
+   INICIO — DISEÑO PROFESIONAL
+   ========================================================================== */
+
+/* El atributo hidden siempre gana sobre reglas display propias */
+[hidden] {
+  display: none !important;
+}
+
+/* Patrón de puntos sutil en el fondo del área principal */
+main {
+  background-image: radial-gradient(rgba(2, 132, 199, 0.06) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+html.dark main {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+}
+
+/* Números tabulares: no "bailan" al cambiar */
+.card-amount,
+.balance-hero-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animación de entrada escalonada */
+@keyframes homeFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-anim {
+  animation: homeFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.home-welcome {
+  animation-delay: 0.02s;
+}
+
+.balance-hero {
+  animation-delay: 0.1s;
+}
+
+.home-cards-grid {
+  animation-delay: 0.18s;
+}
+
+#home-ultimos {
+  animation-delay: 0.26s;
+}
+
+/* SALUDO */
+.home-welcome {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.home-welcome-text {
+  min-width: 0;
+}
+
+.home-greeting {
+  font-size: clamp(1.4rem, 4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  color: var(--texto-principal);
+  line-height: 1.2;
+}
+
+.home-greeting-wave {
+  display: inline-block;
+  font-size: 1.15em;
+  animation: waveHand 2.4s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes waveHand {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  20% {
+    transform: rotate(-6deg);
+  }
+  30% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+.home-date-line {
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--texto-secundario);
+}
+
+/* Chip del periodo */
+.home-period-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-brand);
+  background-color: var(--color-brand-light);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  white-space: nowrap;
+}
+
+.home-period-chip svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* HERO DEL BALANCE */
+.balance-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 55%, #075985 100%);
+  box-shadow:
+    0 20px 40px -12px rgba(2, 132, 199, 0.35),
+    0 4px 12px rgba(2, 100, 150, 0.18);
+}
+
+.balance-hero.negativo {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 55%, #991b1b 100%);
+  box-shadow:
+    0 20px 40px -12px rgba(220, 38, 38, 0.35),
+    0 4px 12px rgba(180, 30, 30, 0.18);
+}
+
+.balance-hero::before,
+.balance-hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.balance-hero::before {
+  width: 16rem;
+  height: 16rem;
+  top: -7rem;
+  right: -4rem;
+}
+
+.balance-hero::after {
+  width: 9rem;
+  height: 9rem;
+  bottom: -4.5rem;
+  right: 6rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.balance-hero-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 0.75rem;
+}
+
+.balance-hero-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.balance-hero-amount {
+  font-size: clamp(2.25rem, 7vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  color: #ffffff;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.balance-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.balance-hero-badge svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* TARJETAS SECUNDARIAS */
+.home-cards-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+@media (min-width: 768px) {
+  .home-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.home-cards-grid .card {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-cards-grid .card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  border-radius: 0.9rem 0.9rem 0 0;
+  pointer-events: none;
+}
+
+.home-cards-grid .card.ingresos::before {
+  background: linear-gradient(90deg, var(--color-ingreso), rgba(16, 185, 129, 0.25));
+}
+
+.home-cards-grid .card.egresos::before {
+  background: linear-gradient(90deg, var(--color-egreso), rgba(239, 68, 68, 0.25));
+}
+
+.home-cards-grid .card.balance::before {
+  background: linear-gradient(90deg, var(--color-brand), rgba(2, 132, 199, 0.25));
+}
+
+/* SECCIÓN ÚLTIMOS MOVIMIENTOS */
+.home-section {
+  background-color: var(--bg-tarjeta);
+  border: 1px solid var(--borde-color);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: var(--sombra-suave);
+  margin-bottom: 1.25rem;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.home-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--texto-principal);
+}
+
+.home-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--borde-color);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-brand);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.home-section-link:hover {
+  background-color: var(--color-brand-light);
+  border-color: rgba(2, 132, 199, 0.35);
+}
+
+.home-mov-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.home-mov-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--borde-color);
+  border-radius: 0.875rem;
+  background-color: rgba(248, 250, 252, 0.6);
+  transition: all 0.15s ease;
+}
+
+html.dark .home-mov-item {
+  background-color: rgba(30, 41, 59, 0.35);
+}
+
+.home-mov-item:hover {
+  border-color: var(--color-brand);
+  background-color: var(--color-brand-50);
+}
+
+html.dark .home-mov-item:hover {
+  background-color: rgba(2, 132, 199, 0.12);
+}
+
+.home-mov-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+}
+
+.home-mov-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.home-mov-icon--ingreso {
+  background-color: var(--color-ingreso-bg);
+  color: var(--color-ingreso);
+}
+
+.home-mov-icon--egreso {
+  background-color: var(--color-egreso-bg);
+  color: var(--color-egreso);
+}
+
+.home-mov-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.home-mov-category {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--texto-principal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-mov-detail {
+  font-size: 0.75rem;
+  color: var(--texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-mov-date {
+  font-size: 0.6875rem;
+  color: var(--texto-atenuado);
+}
+
+.home-mov-amount {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ESTADO VACÍO */
+@media (prefers-reduced-motion: reduce) {
+  .home-anim,
+  .home-greeting-wave {
+    animation: none;
+  }
+}
