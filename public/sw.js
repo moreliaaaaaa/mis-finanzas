@@ -10,6 +10,7 @@ const PRECACHE_URLS = [
   "/index.html",
   "/manifest.webmanifest",
   "/assets/marca/logo-morelia.svg",
+  "/assets/marca/logo-morelia-auth.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",

@@ -710,7 +710,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
     container.innerHTML = `
       <div class="auth-panel">
         <div class="auth-panel-brand">
-          <img class="auth-panel-logo" src="/assets/marca/logo-morelia.svg" alt="Morelia">
+          <img class="auth-panel-logo" src="/assets/marca/logo-morelia-auth.svg" alt="Morelia">
         </div>
         <p class="auth-copy auth-copy--brand">Crea tu cuenta o inicia sesión.</p>
         <form id="${idPrefix}-form" class="auth-form" novalidate>

@@ -85,10 +85,9 @@
   }
 
   .navbar-container {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
 
     min-height: 4.5rem;
 
@@ -102,12 +101,12 @@
 
   .navbar-brand {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
 
     width: auto;
     min-width: 0;
 
-    flex: 0 1 auto;
+    justify-self: center;
   }
 
   .navbar-logo,
@@ -149,8 +148,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-
-    flex: 0 1 auto;
 
     min-width: 0;
     max-width: 42vw;
@@ -200,7 +197,7 @@
 
     width: auto;
 
-    flex: 0 0 auto;
+    justify-self: start;
 
     gap: 0.5rem;
   }
@@ -890,6 +887,8 @@
      ------------------------------------------------------------------------ */
 
   .navbar-container {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+
     min-height: 4.25rem;
 
     gap: 0.5rem;
@@ -908,11 +907,7 @@
   }
 
   .navbar-home-greeting {
-    max-width: 34vw;
-
-    padding: 0.38rem 0.5rem;
-
-    font-size: 0.75rem;
+    display: none;
   }
 
   .navbar-actions {
@@ -1163,7 +1158,7 @@
   }
 
   .navbar-actions {
-    margin-left: auto;
+    margin-left: 0;
   }
 
   .quick-actions {
