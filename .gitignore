@@ -32,3 +32,4 @@ yarn-debug.log*
 # Temporal
 .tmp/
 temp/
+.playwright-cli/

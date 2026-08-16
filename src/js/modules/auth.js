@@ -20,6 +20,7 @@ const ERRORES_TRADUCIDOS = [
   { regex: /email not confirmed|email_not_confirmed/i, msg: "Debes confirmar tu correo con el enlace que te enviamos antes de iniciar sesión." },
   { regex: /rate limit|too many requests/i, msg: "Demasiados intentos. Espera un momento y vuelve a intentar." },
   { regex: /failed to fetch|network|connection/i, msg: "No se pudo conectar con el servidor. Revisa tu internet e inténtalo de nuevo." },
+  { regex: /redirect.*url|url.*not.*allowed|not.*allowed/i, msg: "La URL de confirmacion no esta permitida en Supabase. Intenta de nuevo o agrega este dominio en Auth > URL Configuration." },
 ];
 
 function traducirErrorAuth(error) {
@@ -30,11 +31,44 @@ function traducirErrorAuth(error) {
 }
 
 function normalizarEmail(email = "") {
-  return email.trim().toLowerCase();
+  return email
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .toLowerCase();
 }
 
 function obtenerRedirectAuth() {
-  return `${window.location.origin}${window.location.pathname}`;
+  const { protocol, hostname, origin, pathname } = window.location;
+  const esHttp = protocol === "http:" || protocol === "https:";
+  const esLocalhost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]";
+
+  const esIpPrivada =
+    /^10\./.test(hostname) ||
+    /^192\.168\./.test(hostname) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname) ||
+    /^169\.254\./.test(hostname);
+
+  if (!esHttp || esIpPrivada) {
+    return null;
+  }
+
+  if (protocol === "http:" && !esLocalhost) {
+    return null;
+  }
+
+  return `${origin}${pathname}`;
+}
+
+function obtenerOpcionesRedirectAuth() {
+  const emailRedirectTo = obtenerRedirectAuth();
+
+  return emailRedirectTo
+    ? { emailRedirectTo }
+    : {};
 }
 
 function esErrorEmailNoConfirmado(error) {
@@ -184,16 +218,31 @@ export function inicializarAuth() {
 
 export async function registrarUsuario(nombre, email, password, country = "CL") {
   if (!nombre || !email || !password) {
+    ultimoErrorAuth = "Completa nombre, correo y contraseña.";
+    ultimoTipoMensajeAuth = "error";
     mostrarToast("error", "Complete todos los campos");
     return false;
   }
 
   if (nombre.trim().length < 2) {
+    ultimoErrorAuth = "El nombre debe tener al menos 2 caracteres.";
+    ultimoTipoMensajeAuth = "error";
     mostrarToast("error", "El nombre debe tener al menos 2 caracteres");
     return false;
   }
 
+  const emailNormalizado = normalizarEmail(email);
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
+    ultimoErrorAuth = "Ingresa un correo electronico valido.";
+    ultimoTipoMensajeAuth = "error";
+    mostrarToast("error", "Ingresa un correo electronico valido");
+    return false;
+  }
+
   if (password.length < 6) {
+    ultimoErrorAuth = "La contraseña debe tener al menos 6 caracteres.";
+    ultimoTipoMensajeAuth = "error";
     mostrarToast("error", "La contrasena debe tener al menos 6 caracteres");
     return false;
   }
@@ -214,10 +263,10 @@ export async function registrarUsuario(nombre, email, password, country = "CL") 
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email: normalizarEmail(email),
+      email: emailNormalizado,
       password,
       options: {
-        emailRedirectTo: obtenerRedirectAuth(),
+        ...obtenerOpcionesRedirectAuth(),
         data: {
           nombre: nombre.trim(),
           name: nombre.trim(),
@@ -263,7 +312,9 @@ export async function registrarUsuario(nombre, email, password, country = "CL") 
     return true;
   } catch (error) {
     console.error("Error registrando usuario:", error);
-    mostrarToast("error", error?.message || "No se pudo crear la cuenta");
+    ultimoErrorAuth = traducirErrorAuth(error);
+    ultimoTipoMensajeAuth = "error";
+    mostrarToast("error", ultimoErrorAuth);
     return false;
   }
 }
@@ -386,7 +437,7 @@ async function reenviarConfirmacion(email) {
       type: "signup",
       email: emailNormalizado,
       options: {
-        emailRedirectTo: obtenerRedirectAuth(),
+        ...obtenerOpcionesRedirectAuth(),
       },
     });
 
