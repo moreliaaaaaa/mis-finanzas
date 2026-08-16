@@ -20,6 +20,7 @@ const ERRORES_TRADUCIDOS = [
   { regex: /email not confirmed|email_not_confirmed/i, msg: "Debes confirmar tu correo con el enlace que te enviamos antes de iniciar sesión." },
   { regex: /rate limit|too many requests/i, msg: "Demasiados intentos. Espera un momento y vuelve a intentar." },
   { regex: /failed to fetch|network|connection/i, msg: "No se pudo conectar con el servidor. Revisa tu internet e inténtalo de nuevo." },
+  { regex: /invalid api key|api key|apikey/i, msg: "La clave publica de Supabase no es valida en esta version de la app. Actualiza la pagina o revisa las variables de Vercel." },
   { regex: /redirect.*url|url.*not.*allowed|not.*allowed/i, msg: "La URL de confirmacion no esta permitida en Supabase. Intenta de nuevo o agrega este dominio en Auth > URL Configuration." },
 ];
 
