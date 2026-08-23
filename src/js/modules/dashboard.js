@@ -4,7 +4,13 @@
  */
 
 import { getState, setState } from "../state.js";
-import { formatMoneda, ordenarPorFecha, filtrarPorFechas } from "../utils.js";
+import {
+  escapeHTML,
+  formatMoneda,
+  ordenarPorFecha,
+  filtrarPorFechas,
+  sanitizeCssColor,
+} from "../utils.js";
 import { CATEGORIAS, GRUPOS_CATEGORIAS, COLORES_CATEGORIAS } from "../constants.js";
 import { mostrarToast, actualizarContenido, initializarIconos } from "../ui.js";
 import noteAddIcon from "../../assets/icons/note_add.svg";
@@ -202,6 +208,9 @@ function htmlMovimientoResumen(t) {
   const todasLas = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso];
   const catObj = todasLas.find((c) => c.id === t.categoria);
   const nombreCat = catObj ? catObj.label : t.categoria;
+  const detalleSeguro = escapeHTML(detalle);
+  const nombreCatSeguro = escapeHTML(nombreCat);
+  const fechaSeguro = escapeHTML(new Date(t.fecha).toLocaleDateString());
 
   return `
     <div class="home-mov-item">
@@ -209,9 +218,9 @@ function htmlMovimientoResumen(t) {
         <i data-lucide="${esIngreso ? "trending-up" : "trending-down"}"></i>
       </div>
       <div class="home-mov-info">
-        <span class="home-mov-category">${nombreCat}</span>
-        ${detalle ? `<span class="home-mov-detail" title="${detalle}">${detalle}</span>` : ""}
-        <span class="home-mov-date">${new Date(t.fecha).toLocaleDateString()}</span>
+        <span class="home-mov-category">${nombreCatSeguro}</span>
+        ${detalle ? `<span class="home-mov-detail" title="${detalleSeguro}">${detalleSeguro}</span>` : ""}
+        <span class="home-mov-date">${fechaSeguro}</span>
       </div>
       <span class="home-mov-amount ${colorClase}">${signo}${formatMoneda(t.monto)}</span>
     </div>
@@ -383,29 +392,36 @@ export function renderizarHistorialDashboard() {
     const nombreCat = catObj ? catObj.label : t.categoria;
 
     const { icon, color } = infoVisualTransaccion(t);
+    const idSeguro = escapeHTML(t.id);
+    const iconSeguro = escapeHTML(icon);
+    const colorSeguro = sanitizeCssColor(color);
+    const detalleSeguro = escapeHTML(detalle);
+    const nombreCatSeguro = escapeHTML(nombreCat);
     const fechaCompleta = new Date(`${t.fecha}T00:00:00`).toLocaleDateString(
       "es-CL",
       { weekday: "long", day: "numeric", month: "long", year: "numeric" }
     );
+    const fechaCompletaSeguro = escapeHTML(fechaCompleta);
+    const fechaRelativaSeguro = escapeHTML(fechaRelativa(t.fecha));
 
     html += `
       <div class="history-item ${esIngreso ? "tipo-ingreso" : "tipo-egreso"}">
-        <div class="history-item-icon" style="--cat-color: ${color}">
-          <i data-lucide="${icon}"></i>
+        <div class="history-item-icon" style="--cat-color: ${colorSeguro}">
+          <i data-lucide="${iconSeguro}"></i>
         </div>
         <div class="history-item-info">
           <div class="history-item-title">
-            <span class="history-item-category">${nombreCat}</span>
-            <span class="history-item-date" title="${fechaCompleta}">${fechaRelativa(t.fecha)}</span>
+            <span class="history-item-category">${nombreCatSeguro}</span>
+            <span class="history-item-date" title="${fechaCompletaSeguro}">${fechaRelativaSeguro}</span>
           </div>
-          <span class="history-item-description" title="${detalle}">${detalle}</span>
+          <span class="history-item-description" title="${detalleSeguro}">${detalleSeguro}</span>
         </div>
         <span class="history-item-amount ${esIngreso ? "ingreso" : "egreso"}">${signo}${formatMoneda(t.monto)}</span>
         <div class="history-item-actions">
-          <button type="button" onclick="window.editarRegistro('${t.id}')" title="Editar" aria-label="Editar movimiento" class="history-item-action">
+          <button type="button" data-history-action="edit" data-transaction-id="${idSeguro}" title="Editar" aria-label="Editar movimiento" class="history-item-action">
             <i data-lucide="pencil"></i>
           </button>
-          <button type="button" onclick="window.eliminarRegistro('${t.id}')" title="Eliminar" aria-label="Eliminar movimiento" class="history-item-action history-item-action--delete">
+          <button type="button" data-history-action="delete" data-transaction-id="${idSeguro}" title="Eliminar" aria-label="Eliminar movimiento" class="history-item-action history-item-action--delete">
             <i data-lucide="trash-2"></i>
           </button>
         </div>
@@ -419,11 +435,11 @@ export function renderizarHistorialDashboard() {
   if (totalPaginas > 1) {
     html += `
       <div class="pagination">
-        <button class="pagination-btn" ${paginaActual === 1 ? "disabled" : ""} onclick="window.cambiarPagina(${paginaActual - 1})" aria-label="Página anterior">
+        <button class="pagination-btn" ${paginaActual === 1 ? "disabled" : ""} data-page="${paginaActual - 1}" aria-label="Página anterior">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
         <span class="pagination-info">Página ${paginaActual} de ${totalPaginas}</span>
-        <button class="pagination-btn" ${paginaActual === totalPaginas ? "disabled" : ""} onclick="window.cambiarPagina(${paginaActual + 1})" aria-label="Página siguiente">
+        <button class="pagination-btn" ${paginaActual === totalPaginas ? "disabled" : ""} data-page="${paginaActual + 1}" aria-label="Página siguiente">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
@@ -434,6 +450,23 @@ export function renderizarHistorialDashboard() {
   html += `<div class="results-count">${totalItems} registro(s) encontrado(s)</div>`;
 
   container.innerHTML = html;
+  container.querySelectorAll("[data-history-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.transactionId;
+      if (!id) return;
+
+      if (button.dataset.historyAction === "edit") {
+        editarRegistro(id);
+      } else if (button.dataset.historyAction === "delete") {
+        eliminarRegistro(id);
+      }
+    });
+  });
+  container.querySelectorAll("[data-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      cambiarPagina(Number(button.dataset.page));
+    });
+  });
   initializarIconos();
 }
 

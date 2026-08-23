@@ -7,6 +7,7 @@ import { getState, setState } from "../state.js";
 import { guardarEnStorage, obtenerDelStorage } from "../storage.js";
 import { mostrarToast } from "../ui.js";
 import { CATEGORIAS } from "../constants.js";
+import { escapeHTML, sanitizeCssColor } from "../utils.js";
 
 const STORAGE_CUSTOM_CATEGORIES = "customCategories";
 
@@ -59,10 +60,10 @@ export function agregarCategoria(categoria) {
 
   const nuevaCategoria = {
     id: `custom_${Date.now()}`,
-    label: categoria.label,
+    label: String(categoria.label).trim(),
     grupo: categoria.grupo,
     tipo: categoria.tipo,
-    color: categoria.color || "#64748b",
+    color: sanitizeCssColor(categoria.color),
     esPersonalizada: true,
   };
 
@@ -159,15 +160,20 @@ export function renderizarPanelCategorias() {
     `;
   } else {
     custom.forEach((cat) => {
+      const colorSeguro = sanitizeCssColor(cat.color);
+      const labelSeguro = escapeHTML(cat.label);
+      const tipoSeguro = cat.tipo === "ingreso" ? "Ingreso" : "Egreso";
+      const grupoSeguro = escapeHTML(cat.grupo);
+      const idSeguro = escapeHTML(cat.id);
       html += `
         <div class="category-item">
           <div class="category-item-info">
-            <span class="category-color-dot" style="background-color: ${cat.color}"></span>
-            <span class="category-item-name">${cat.label}</span>
-            <span class="category-item-type">${cat.tipo === "ingreso" ? "Ingreso" : "Egreso"}</span>
-            <span class="category-item-group">${cat.grupo}</span>
+            <span class="category-color-dot" style="background-color: ${colorSeguro}"></span>
+            <span class="category-item-name">${labelSeguro}</span>
+            <span class="category-item-type">${tipoSeguro}</span>
+            <span class="category-item-group">${grupoSeguro}</span>
           </div>
-          <button type="button" class="btn-icon delete" data-delete-cat="${cat.id}" title="Eliminar">
+          <button type="button" class="btn-icon delete" data-delete-cat="${idSeguro}" title="Eliminar">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
         </div>

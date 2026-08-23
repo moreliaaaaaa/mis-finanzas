@@ -12,7 +12,7 @@
   </p>
 
   <form id="auth-login-form" class="auth-form" novalidate>
-    <label class="auth-field" for="auth-name">
+    <label class="auth-field auth-register-only" for="auth-name" data-auth-register-only>
       <span>Nombre</span>
       <input
         type="text"
@@ -40,7 +40,7 @@
       />
     </label>
 
-    <label class="auth-field" for="auth-country">
+    <label class="auth-field auth-register-only" for="auth-country" data-auth-register-only>
       <span>País</span>
       <select
         id="auth-country"
@@ -106,12 +106,12 @@
       </button>
     </div>
 
-    <button
+   <!-- <button
       type="button"
       class="auth-recover-btn"
       data-auth-action="recover"
     >
       ¿Olvidaste tu contraseña?
-    </button>
+    </button> -->
   </form>
 </div>

@@ -5,6 +5,37 @@
 
 import { APP_CONFIG } from "./config.js";
 
+const HTML_ESCAPE_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+/**
+ * Escapa texto antes de interpolarlo en HTML dinamico.
+ * @param {any} value
+ * @returns {string}
+ */
+export function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => HTML_ESCAPE_MAP[char]);
+}
+
+/**
+ * Permite solo colores CSS esperados antes de usarlos en atributos style.
+ * @param {any} value
+ * @param {string} fallback
+ * @returns {string}
+ */
+export function sanitizeCssColor(value, fallback = "#64748b") {
+  const color = String(value ?? "").trim();
+  if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(color)) {
+    return color;
+  }
+  return fallback;
+}
+
 /**
  * Formatea un número como moneda
  * @param {number} valor - Valor a formatear
@@ -210,6 +241,8 @@ export function detectarTemaSistema() {
 }
 
 export default {
+  escapeHTML,
+  sanitizeCssColor,
   formatMoneda,
   formatearFechaTexto,
   obtenerFechaHoy,

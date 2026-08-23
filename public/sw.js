@@ -4,24 +4,60 @@
  * Copiado automáticamente a dist/ por Vite desde public/
  */
 
-const CACHE_NAME = "misfinanzas-v5";
-const PRECACHE_URLS = [
+const BUILD_ID = "__BUILD_ID__";
+const CACHE_NAME = `misfinanzas-${BUILD_ID}`;
+const STATIC_PRECACHE_URLS = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
+  "/manifest.json",
   "/assets/marca/logo-morelia.svg",
   "/assets/marca/logo-morelia-auth.svg",
+  "/icons/favicon.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",
+  "/templates/auth-view.html",
+  "/templates/egresos-view.html",
+  "/templates/footer.html",
+  "/templates/header.html",
+  "/templates/historial-view.html",
+  "/templates/home-view.html",
+  "/templates/perfil-view.html",
+  "/templates/presupuesto-view.html",
+  "/templates/registro-view.html",
+  "/templates/ultimos-view.html",
 ];
+const BUILD_PRECACHE_URLS = [
+  // __BUILD_PRECACHE_URLS__
+];
+const PRECACHE_URLS = [...new Set([...STATIC_PRECACHE_URLS, ...BUILD_PRECACHE_URLS])];
+
+async function precachearRecursos(cache) {
+  const resultados = await Promise.allSettled(
+    PRECACHE_URLS.map(async (url) => {
+      const request = new Request(url, { cache: "reload" });
+      const response = await fetch(request);
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      await cache.put(request, response);
+    })
+  );
+
+  resultados.forEach((resultado, index) => {
+    if (resultado.status === "rejected") {
+      console.warn("No se pudo precachear:", PRECACHE_URLS[index], resultado.reason);
+    }
+  });
+}
 
 // Instalación - precache del shell de la app
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then((cache) => precachearRecursos(cache))
       .catch((error) => {
         console.error("Precache falló (modo offline parcial):", error);
       })

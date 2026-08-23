@@ -7,13 +7,20 @@ import { ENV, isSupabaseConfigured } from "./config.js";
 import { setState, getState } from "./state.js";
 import { mostrarToast } from "./ui.js";
 import { guardarEnStorage, obtenerDelStorage } from "./storage.js";
-import { createClient } from "@supabase/supabase-js";
 
 let supabaseClient = null;
 let isConnected = false;
 let lastConnectionError = null;
-const USER_ID_FALLBACK = "00000000-0000-0000-0000-000000000000";
+let supabaseSdkLoader = null;
 const STORAGE_PENDIENTES = "pendientes";
+
+async function cargarSupabaseSdk() {
+  if (!supabaseSdkLoader) {
+    supabaseSdkLoader = import("@supabase/supabase-js");
+  }
+
+  return supabaseSdkLoader;
+}
 
 // ---------------------------------------------------------------------------
 // Cola de sincronización: los movimientos sin conexión quedan pendientes
@@ -48,17 +55,6 @@ function quitarPendiente(accion, id) {
   guardarPendientes(pendientes);
 }
 
-function esErrorDeSesion(error) {
-  const mensaje = String(error?.message || "");
-  const status = Number(error?.status || error?.code || 0);
-  return (
-    status === 401 ||
-    status === 403 ||
-    status === 42501 ||
-    /jwt|rls|row.?level|policy|session|anon/i.test(mensaje)
-  );
-}
-
 async function existeEnNube(id) {
   if (!supabaseClient) return false;
   const { data } = await supabaseClient
@@ -90,50 +86,12 @@ async function asegurarSesionSupabase() {
   }
 }
 
-async function asegurarSesionAnonimaSupabase() {
-  if (!supabaseClient) return null;
-
-  try {
-    const userId = await asegurarSesionSupabase();
-    if (userId) return userId;
-
-    const {
-      data: { user },
-      error: signInError,
-    } = await supabaseClient.auth.signInAnonymously();
-
-    if (signInError) throw signInError;
-    return user?.id || null;
-  } catch (error) {
-    console.warn("No se pudo iniciar sesión anónima en Supabase:", error);
-    return null;
+async function requerirSesionSupabase() {
+  const userId = await asegurarSesionSupabase();
+  if (!userId) {
+    throw new Error("Se requiere una sesión real de Supabase para sincronizar transacciones.");
   }
-}
-
-async function obtenerUserIdParaTransaccion(transaction) {
-  const placeholderValue = transaction?.user_id;
-  const isPlaceholder = placeholderValue === USER_ID_FALLBACK || placeholderValue === null || placeholderValue === undefined;
-
-  if (placeholderValue && !isPlaceholder) {
-    return placeholderValue;
-  }
-
-  const stateUserId = getState().userId;
-  if (stateUserId && !stateUserId.startsWith?.("local_")) {
-    return stateUserId;
-  }
-
-  const sessionUserId = await asegurarSesionSupabase();
-  if (sessionUserId) {
-    return sessionUserId;
-  }
-
-  const userId = await asegurarSesionAnonimaSupabase();
-  if (userId) {
-    return userId;
-  }
-
-  return USER_ID_FALLBACK;
+  return userId;
 }
 
 /**
@@ -150,6 +108,8 @@ export async function inicializarSupabase() {
   }
 
   try {
+    const { createClient } = await cargarSupabaseSdk();
+
     supabaseClient = createClient(ENV.supabaseUrl, ENV.supabaseKey, {
       auth: {
         persistSession: true,
@@ -164,7 +124,9 @@ export async function inicializarSupabase() {
     } = await supabaseClient.auth.getSession();
 
     if (sessionError) throw sessionError;
-    if (session?.user?.id && !session.user.is_anonymous) {
+    if (session?.user?.is_anonymous) {
+      await supabaseClient.auth.signOut();
+    } else if (session?.user?.id) {
       const user = session.user;
       setState({
         userId: user.id,
@@ -221,22 +183,10 @@ export async function guardarTransaccionSupabase(transaction) {
   if (!esSupabaseConectado()) return false;
 
   try {
-    let userId = await obtenerUserIdParaTransaccion(transaction);
-    let { error } = await supabaseClient
+    const userId = await requerirSesionSupabase();
+    const { error } = await supabaseClient
       .from("transacciones")
       .insert([{ ...transaction, user_id: userId }]);
-
-    if (error && esErrorDeSesion(error)) {
-      // Reintentar con sesión anónima fresca (si el proyecto lo permite)
-      const anonUserId = await asegurarSesionAnonimaSupabase();
-      if (anonUserId && anonUserId !== userId) {
-        const reintento = await supabaseClient
-          .from("transacciones")
-          .insert([{ ...transaction, user_id: anonUserId }]);
-        error = reintento.error;
-        userId = anonUserId;
-      }
-    }
 
     if (error) throw error;
 
@@ -258,21 +208,12 @@ export async function actualizarTransaccionSupabase(id, updates) {
   if (!esSupabaseConectado()) return false;
 
   try {
-    let { error } = await supabaseClient
+    const activeUserId = await requerirSesionSupabase();
+    const { error } = await supabaseClient
       .from("transacciones")
       .update(updates)
-      .eq("id", id);
-
-    if (error && esErrorDeSesion(error)) {
-      const anonUserId = await asegurarSesionAnonimaSupabase();
-      if (anonUserId) {
-        const reintento = await supabaseClient
-          .from("transacciones")
-          .update(updates)
-          .eq("id", id);
-        error = reintento.error;
-      }
-    }
+      .eq("id", id)
+      .eq("user_id", activeUserId);
 
     if (error) throw error;
 
@@ -293,21 +234,12 @@ export async function eliminarTransaccionSupabase(id) {
   if (!esSupabaseConectado()) return false;
 
   try {
-    let { error } = await supabaseClient
+    const activeUserId = await requerirSesionSupabase();
+    const { error } = await supabaseClient
       .from("transacciones")
       .delete()
-      .eq("id", id);
-
-    if (error && esErrorDeSesion(error)) {
-      const anonUserId = await asegurarSesionAnonimaSupabase();
-      if (anonUserId) {
-        const reintento = await supabaseClient
-          .from("transacciones")
-          .delete()
-          .eq("id", id);
-        error = reintento.error;
-      }
-    }
+      .eq("id", id)
+      .eq("user_id", activeUserId);
 
     if (error) throw error;
 
@@ -330,22 +262,16 @@ export async function borrarTransaccionesSupabase(transactions = getState().tran
 
   const ids = [...new Set((transactions || []).map((t) => t?.id).filter(Boolean))];
   if (ids.length === 0) return true;
-  const activeUserId = getState().userId;
-  const shouldScopeByUser = activeUserId && !String(activeUserId).startsWith("local_");
 
   try {
+    const activeUserId = await requerirSesionSupabase();
     for (let i = 0; i < ids.length; i += 100) {
       const lote = ids.slice(i, i + 100);
-      let query = supabaseClient
+      const { error } = await supabaseClient
         .from("transacciones")
         .delete()
-        .in("id", lote);
-
-      if (shouldScopeByUser) {
-        query = query.eq("user_id", activeUserId);
-      }
-
-      const { error } = await query;
+        .in("id", lote)
+        .eq("user_id", activeUserId);
 
       if (error) throw error;
     }
@@ -368,6 +294,13 @@ export async function borrarTransaccionesSupabase(transactions = getState().tran
  */
 export async function sincronizarPendientes() {
   if (!esSupabaseConectado()) return false;
+  let activeUserId;
+  try {
+    activeUserId = await requerirSesionSupabase();
+  } catch (error) {
+    console.warn("SincronizaciÃ³n omitida: no hay sesiÃ³n real de Supabase.", error);
+    return false;
+  }
 
   const pendientes = [...obtenerPendientes()];
   if (pendientes.length === 0) return true;
@@ -387,18 +320,19 @@ export async function sincronizarPendientes() {
           sincronizados++;
           continue;
         }
-        const userId = await obtenerUserIdParaTransaccion(transaccion);
         const { error } = await supabaseClient
           .from("transacciones")
-          .insert([{ ...transaccion, user_id: userId }]);
+          .insert([{ ...transaccion, user_id: activeUserId }]);
         if (error) throw error;
         quitarPendiente("insert", pendiente.id);
         sincronizados++;
       } else if (pendiente.accion === "update" && transaccion) {
+        const { user_id, ...payload } = transaccion;
         const { error } = await supabaseClient
           .from("transacciones")
-          .update(transaccion)
-          .eq("id", transaccion.id);
+          .update(payload)
+          .eq("id", transaccion.id)
+          .eq("user_id", activeUserId);
         if (error) throw error;
         quitarPendiente("update", pendiente.id);
         sincronizados++;
@@ -406,7 +340,8 @@ export async function sincronizarPendientes() {
         const { error } = await supabaseClient
           .from("transacciones")
           .delete()
-          .eq("id", pendiente.id);
+          .eq("id", pendiente.id)
+          .eq("user_id", activeUserId);
         if (error) throw error;
         quitarPendiente("delete", pendiente.id);
         sincronizados++;
@@ -431,6 +366,7 @@ export async function obtenerTransaccionesSupabase() {
   if (!esSupabaseConectado()) return [];
 
   try {
+    await requerirSesionSupabase();
     const { data, error } = await supabaseClient
       .from("transacciones")
       .select("*")

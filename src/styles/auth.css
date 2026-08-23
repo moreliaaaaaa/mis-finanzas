@@ -18,7 +18,6 @@
     box-shadow:
         0 20px 45px rgba(0, 0, 0, 0.08),
         0 4px 12px rgba(0, 0, 0, 0.04);
-
     transition:
         transform 0.25s ease,
         box-shadow 0.25s ease;
@@ -36,11 +35,9 @@
 
 .auth-panel-brand {
     width: 100%;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     margin: 0 0 1rem;
     padding: 0.25rem 0;
 }
@@ -51,7 +48,6 @@
     height: auto;
     max-width: 85%;
     object-fit: contain;
-
     /* "orelia" hereda el color del tema (currentColor en el SVG) */
     color: var(--texto-principal);
     filter: drop-shadow(
@@ -59,26 +55,22 @@
     );
 }
 
-
-/* --------------------------------------------------------------------------
+/* -------------------------------------------------------------
    TEXTO DE PRESENTACIÓN
-   -------------------------------------------------------------------------- */
+   -------------------------------------------------------------- */
 
 .auth-copy--brand {
     margin: 0 0 1.5rem;
     padding: 0 0.5rem;
-
     text-align: center;
-
     font-size: 1rem;
     line-height: 1.45;
     font-weight: 500;
-
     color: var(--texto-secundario);
 }
-/* --------------------------------------------------------------------------
+/* ------------------------------------------------------------------
    TABS
-   -------------------------------------------------------------------------- */
+   -------------------------------------------------------------------- */
 
 .auth-tabs {
     display: grid;
@@ -170,6 +162,14 @@
     gap: 0.45rem;
 }
 
+.auth-register-only {
+    display: none;
+}
+
+.auth-panel.is-signup .auth-register-only {
+    display: flex;
+}
+
 .auth-field span {
     padding-left: 0.1rem;
 
@@ -216,13 +216,10 @@
 .auth-field input:focus,
 .auth-field select:focus {
     border-color: var(--color-brand);
-
     background: var(--bg-tarjeta);
-
     box-shadow:
         0 0 0 3px rgba(2, 132, 199, 0.12);
 }
-
 
 /* --------------------------------------------------------------------------
    CONTRASEÑA
@@ -427,6 +424,40 @@
    MODAL DE AUTENTICACIÓN
    -------------------------------------------------------------------------- */
 
+@keyframes authModalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes authModalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes authModalSlideFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 .auth-modal-overlay {
     position: fixed;
     inset: 0;
@@ -563,5 +594,63 @@
 
 .dropdown-auth {
     display: none !important;
+}
+
+
+/* --------------------------------------------------------------------------
+   ACCESIBILIDAD
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-panel,
+    .auth-tab,
+    .auth-btn,
+    .auth-modal-overlay,
+    .auth-modal-card,
+    .auth-field input,
+    .auth-field select {
+        transition: none;
+        animation: none;
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+    .auth-modal-overlay {
+        align-items: center;
+        padding: 0.75rem;
+    }
+
+    .auth-panel {
+        padding: 1.35rem;
+        border-radius: 1.1rem;
+    }
+
+    .auth-modal-card {
+        width: 100%;
+        max-height: calc(100vh - 1.5rem);
+
+        padding: 1.35rem 1.1rem;
+
+        border-radius: 1.25rem;
+    }
+
+    .auth-panel-brand {
+        margin-bottom: 1rem;
+    }
+
+    .auth-panel-logo {
+        width: clamp(8.5rem, 42vw, 11rem);
+        height: auto;
+        max-width: 78%;
+    }
+
+    .auth-copy {
+        font-size: 0.8rem;
+    }
 }
 

@@ -5,6 +5,7 @@
 
 import { getState } from "./state.js";
 import { APP_CONFIG } from "./config.js";
+import { escapeHTML } from "./utils.js";
 import {
   createIcons,
   Activity,
@@ -98,13 +99,15 @@ export function mostrarToast(tipo, mensaje, opciones = {}) {
     info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
   };
 
+  const mensajeSeguro = escapeHTML(mensaje);
+  const textoAccionSeguro = escapeHTML(opciones.textoAccion || "Deshacer");
   const accionHTML = opciones.accion
-    ? `<button class="toast-action" data-toast-action="true">${opciones.textoAccion || "Deshacer"}</button>`
+    ? `<button class="toast-action" data-toast-action="true">${textoAccionSeguro}</button>`
     : "";
 
   toast.innerHTML = `
     <div class="toast-icon">${iconoMap[tipo] || iconoMap.info}</div>
-    <div class="toast-message">${mensaje}</div>
+    <div class="toast-message">${mensajeSeguro}</div>
     ${accionHTML}
   `;
 
@@ -341,15 +344,21 @@ export function ocultarCargandoBoton(selector) {
 }
 
 /**
- * Actualiza el contenido de un elemento
+ * Actualiza el contenido de un elemento como texto por defecto.
  * @param {string} selector
  * @param {string} contenido
+ * @param {{ trustedHTML?: boolean }} opciones
  */
-export function actualizarContenido(selector, contenido) {
+export function actualizarContenido(selector, contenido, opciones = {}) {
   const el = document.querySelector(selector);
   if (el) {
-    el.innerHTML = contenido;
-    initializarIconos();
+    if (opciones.trustedHTML === true) {
+      el.innerHTML = contenido;
+      initializarIconos();
+      return;
+    }
+
+    el.textContent = String(contenido ?? "");
   }
 }
 

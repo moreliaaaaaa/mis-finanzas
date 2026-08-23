@@ -42,6 +42,7 @@ as $$
     from public.transacciones
 
     where user_id = (select auth.uid())
+      and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
       and fecha between fecha_desde and fecha_hasta;
 $$;
 
@@ -69,6 +70,7 @@ as $$
     from public.transacciones
 
     where user_id = (select auth.uid())
+      and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
       and tipo = 'egreso'
       and fecha between fecha_desde and fecha_hasta
 

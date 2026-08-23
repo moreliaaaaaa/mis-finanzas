@@ -3,14 +3,22 @@
  * Gestión de gráficos con Chart.js
  */
 
-import Chart from "chart.js/auto";
 import { getState } from "../state.js";
 import { CATEGORIAS, COLORES_CATEGORIAS } from "../constants.js";
-import { formatMoneda, obtenerNombreMes } from "../utils.js";
+import { escapeHTML, formatMoneda, obtenerNombreMes, sanitizeCssColor } from "../utils.js";
 
 let chartInstance = null;
 let chartTendenciaInstance = null;
 let chartComparativaInstance = null;
+let chartLoader = null;
+
+async function cargarChart() {
+  if (!chartLoader) {
+    chartLoader = import("chart.js/auto").then((module) => module.default);
+  }
+
+  return chartLoader;
+}
 
 /**
  * Obtiene los totales de egresos por categoría (incluye categorías personalizadas),
@@ -25,7 +33,7 @@ function obtenerEgresosPorCategoria() {
     mapa[cat.id] = {
       id: cat.id,
       label: cat.label,
-      color: COLORES_CATEGORIAS[cat.id] || "#94a3b8",
+      color: sanitizeCssColor(COLORES_CATEGORIAS[cat.id], "#94a3b8"),
       total: 0,
       count: 0,
     };
@@ -38,7 +46,7 @@ function obtenerEgresosPorCategoria() {
         mapa[cat.id] = {
           id: cat.id,
           label: cat.label,
-          color: cat.color || "#94a3b8",
+          color: sanitizeCssColor(cat.color, "#94a3b8"),
           total: 0,
           count: 0,
         };
@@ -61,7 +69,7 @@ function obtenerEgresosPorCategoria() {
 /**
  * Actualiza el gráfico de egresos
  */
-export function actualizarGraficoEgresos() {
+export async function actualizarGraficoEgresos() {
   const state = getState();
   const ctx = document.getElementById("chart-egresos-container");
   const fallback = document.getElementById("chart-fallback");
@@ -93,6 +101,7 @@ export function actualizarGraficoEgresos() {
   }
 
   const isDark = state.currentTheme === "dark";
+  const Chart = await cargarChart();
 
   chartInstance = new Chart(ctx, {
     type: "doughnut",
@@ -158,10 +167,12 @@ export function renderizarDesgloseEgresos() {
       leyenda.innerHTML = totales
         .map((item) => {
           const pct = Math.round((item.total / totalGeneral) * 100);
+          const colorSeguro = sanitizeCssColor(item.color);
+          const labelSeguro = escapeHTML(item.label);
           return `
             <div class="chart-legend-item">
-              <span class="chart-legend-color" style="background-color: ${item.color}"></span>
-              <span class="chart-legend-label">${item.label}</span>
+              <span class="chart-legend-color" style="background-color: ${colorSeguro}"></span>
+              <span class="chart-legend-label">${labelSeguro}</span>
               <span class="chart-legend-pct">${pct}%</span>
             </div>
           `;
@@ -213,14 +224,16 @@ export function renderizarDesgloseEgresos() {
   lista.innerHTML = totales
     .map((item, index) => {
       const pct = Math.round((item.total / totalGeneral) * 100);
+      const colorSeguro = sanitizeCssColor(item.color);
+      const labelSeguro = escapeHTML(item.label);
       return `
         <div class="expense-breakdown-item">
           <span class="expense-breakdown-rank">${index + 1}</span>
           <div class="expense-breakdown-main">
             <div class="expense-breakdown-top">
               <div class="expense-breakdown-name-wrap">
-                <span class="expense-breakdown-dot" style="background-color: ${item.color}"></span>
-                <span class="expense-breakdown-name">${item.label}</span>
+                <span class="expense-breakdown-dot" style="background-color: ${colorSeguro}"></span>
+                <span class="expense-breakdown-name">${labelSeguro}</span>
                 <span class="expense-breakdown-count">${item.count} mov.</span>
               </div>
               <div class="expense-breakdown-values">
@@ -229,7 +242,7 @@ export function renderizarDesgloseEgresos() {
               </div>
             </div>
             <div class="expense-breakdown-bar">
-              <div class="expense-breakdown-fill" style="width: ${pct}%; background-color: ${item.color}"></div>
+              <div class="expense-breakdown-fill" style="width: ${pct}%; background-color: ${colorSeguro}"></div>
             </div>
           </div>
         </div>
@@ -268,7 +281,7 @@ function agruparPorMes(transactions) {
 /**
  * Renderiza gráfico de tendencia mensual (ingresos vs egresos)
  */
-export function renderizarGraficoTendencia() {
+export async function renderizarGraficoTendencia() {
   const state = getState();
   const canvas = document.getElementById("chart-tendencia");
   if (!canvas) return;
@@ -302,6 +315,7 @@ export function renderizarGraficoTendencia() {
   const egresos = mesesOrdenados.map((m) => datosPorMes[m].egresos);
 
   const isDark = state.currentTheme === "dark";
+  const Chart = await cargarChart();
 
   chartTendenciaInstance = new Chart(canvas, {
     type: "line",
@@ -379,7 +393,7 @@ export function renderizarGraficoTendencia() {
 /**
  * Renderiza gráfico comparativo mes a mes
  */
-export function renderizarGraficoComparativa() {
+export async function renderizarGraficoComparativa() {
   const state = getState();
   const canvas = document.getElementById("chart-comparativa");
   if (!canvas) return;
@@ -418,6 +432,7 @@ export function renderizarGraficoComparativa() {
   );
 
   const isDark = state.currentTheme === "dark";
+  const Chart = await cargarChart();
 
   chartComparativaInstance = new Chart(canvas, {
     type: "bar",
@@ -478,9 +493,11 @@ export function renderizarGraficoComparativa() {
  * @param {array} labels
  * @param {array} data
  */
-export function crearGraficoBarras(canvasId, labels, data) {
+export async function crearGraficoBarras(canvasId, labels, data) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+
+  const Chart = await cargarChart();
 
   return new Chart(canvas, {
     type: "bar",
@@ -520,9 +537,11 @@ export function crearGraficoBarras(canvasId, labels, data) {
  * @param {array} labels
  * @param {array} data
  */
-export function crearGraficoLineas(canvasId, labels, data) {
+export async function crearGraficoLineas(canvasId, labels, data) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+
+  const Chart = await cargarChart();
 
   return new Chart(canvas, {
     type: "line",

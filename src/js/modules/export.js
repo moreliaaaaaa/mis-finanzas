@@ -6,7 +6,23 @@
 import { getState } from "../state.js";
 import { mostrarToast } from "../ui.js";
 import { CATEGORIAS, MENSAJES } from "../constants.js";
-import { formatMoneda, formatearFechaTexto, obtenerFechaHoy } from "../utils.js";
+import { escapeHTML, formatMoneda, formatearFechaTexto, obtenerFechaHoy } from "../utils.js";
+
+function neutralizarFormulaCSV(value) {
+  const text = String(value ?? "");
+  return /^[\s]*[=+\-@]|\t|\r/.test(text) ? `'${text}` : text;
+}
+
+function celdaCSV(value) {
+  const segura = neutralizarFormulaCSV(value).replace(/"/g, '""');
+  return `"${segura}"`;
+}
+
+function etiquetaCategoria(categoriaId) {
+  const todasLas = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso];
+  const catObj = todasLas.find((c) => c.id === categoriaId);
+  return catObj ? catObj.label : categoriaId;
+}
 
 /**
  * Exporta transacciones a CSV
@@ -19,18 +35,20 @@ export function exportarCSV() {
     return;
   }
 
-  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-  csvContent += "ID,Fecha,Tipo,Categoría,Monto,Detalle\n";
-
-  const todasLas = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso];
+  const rows = [["ID", "Fecha", "Tipo", "Categoría", "Monto", "Detalle"]];
 
   state.transactions.forEach((t) => {
-    const catObj = todasLas.find((c) => c.id === t.categoria);
-    const nombreCat = catObj ? catObj.label : t.categoria;
-    const detalleEscapado = `"${(t.detalle || "Sin detalle").replace(/"/g, '""')}"`;
-
-    csvContent += `${t.id},${t.fecha},${t.tipo},${nombreCat},${t.monto},${detalleEscapado}\n`;
+    rows.push([
+      t.id,
+      t.fecha,
+      t.tipo,
+      etiquetaCategoria(t.categoria),
+      t.monto,
+      t.detalle || "Sin detalle",
+    ]);
   });
+
+  const csvContent = `\uFEFF${rows.map((row) => row.map(celdaCSV).join(",")).join("\n")}\n`;
 
   descargarArchivo(
     csvContent,
@@ -57,8 +75,7 @@ export function exportarJSON() {
     transactions: state.transactions,
   };
 
-  const jsonContent =
-    "data:application/json;charset=utf-8," + JSON.stringify(data, null, 2);
+  const jsonContent = JSON.stringify(data, null, 2);
   descargarArchivo(
     jsonContent,
     `Finanzas_Export_${obtenerFechaHoy()}.json`,
@@ -74,13 +91,15 @@ export function exportarJSON() {
  * @param {string} mimeType
  */
 function descargarArchivo(content, filename, mimeType) {
-  const encodedUri = encodeURI(content);
+  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
+  link.setAttribute("href", url);
   link.setAttribute("download", filename);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -98,8 +117,6 @@ export function generarReporte() {
   let totalEgresos = 0;
   const porCategoria = {};
 
-  const todasLas = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso];
-
   state.transactions.forEach((t) => {
     const monto = parseFloat(t.monto) || 0;
 
@@ -109,8 +126,7 @@ export function generarReporte() {
       totalEgresos += monto;
     }
 
-    const catObj = todasLas.find((c) => c.id === t.categoria);
-    const nombreCat = catObj ? catObj.label : t.categoria;
+    const nombreCat = etiquetaCategoria(t.categoria);
 
     if (!porCategoria[nombreCat]) {
       porCategoria[nombreCat] = { monto: 0, cantidad: 0 };
@@ -132,8 +148,7 @@ export function generarReporte() {
   };
 
   // Descargarlo
-  const content =
-    "data:application/json;charset=utf-8," + JSON.stringify(reporte, null, 2);
+  const content = JSON.stringify(reporte, null, 2);
   descargarArchivo(
     content,
     `Reporte_${obtenerFechaHoy()}.json`,
@@ -156,8 +171,6 @@ export function exportarPDF() {
   let totalIngresos = 0;
   let totalEgresos = 0;
 
-  const todasLas = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso];
-
   state.transactions.forEach((t) => {
     const monto = parseFloat(t.monto) || 0;
     if (t.tipo === "ingreso") {
@@ -172,18 +185,20 @@ export function exportarPDF() {
   // Generar HTML del reporte
   let tablaHTML = "";
   state.transactions.forEach((t) => {
-    const catObj = todasLas.find((c) => c.id === t.categoria);
-    const nombreCat = catObj ? catObj.label : t.categoria;
+    const nombreCat = escapeHTML(etiquetaCategoria(t.categoria));
     const tipoLabel = t.tipo === "ingreso" ? "Ingreso" : "Egreso";
     const color = t.tipo === "ingreso" ? "#059669" : "#dc2626";
+    const fecha = escapeHTML(formatearFechaTexto(t.fecha));
+    const monto = escapeHTML(formatMoneda(t.monto));
+    const detalle = escapeHTML(t.detalle || "-");
 
     tablaHTML += `
       <tr>
-        <td>${formatearFechaTexto(t.fecha)}</td>
+        <td>${fecha}</td>
         <td><span style="color:${color};font-weight:600">${tipoLabel}</span></td>
         <td>${nombreCat}</td>
-        <td style="text-align:right;font-weight:600">${formatMoneda(t.monto)}</td>
-        <td>${t.detalle || "-"}</td>
+        <td style="text-align:right;font-weight:600">${monto}</td>
+        <td>${detalle}</td>
       </tr>
     `;
   });
@@ -254,20 +269,24 @@ export function exportarPDF() {
       <div class="footer">
         <p>MisFinanzas - Control inteligente de finanzas | ${state.transactions.length} transacciones</p>
       </div>
+      <script>
+        window.addEventListener("load", () => {
+          setTimeout(() => window.print(), 300);
+        });
+      </script>
     </body>
     </html>
   `;
 
   // Abrir ventana de impresión
-  const printWindow = window.open("", "_blank");
+  const reporteBlob = new Blob([htmlPDF], { type: "text/html;charset=utf-8" });
+  const reporteUrl = URL.createObjectURL(reporteBlob);
+  const printWindow = window.open(reporteUrl, "_blank");
   if (printWindow) {
-    printWindow.document.write(htmlPDF);
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+    setTimeout(() => URL.revokeObjectURL(reporteUrl), 60000);
     mostrarToast("success", "Reporte PDF listo para imprimir/guardar");
   } else {
+    URL.revokeObjectURL(reporteUrl);
     mostrarToast("error", "El navegador bloqueó la ventana emergente. Permite ventanas emergentes para exportar PDF.");
   }
 }

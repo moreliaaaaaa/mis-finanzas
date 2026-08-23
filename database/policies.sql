@@ -33,7 +33,7 @@ drop policy if exists "Usuarios eliminan transacciones"
 
 -- ------------------------------------------------------------
 -- 3. SELECT
--- El usuario solo puede leer sus propias transacciones
+-- El usuario permanente solo puede leer sus propias transacciones
 -- ------------------------------------------------------------
 
 create policy "Usuarios ven sus transacciones"
@@ -42,13 +42,14 @@ create policy "Usuarios ven sus transacciones"
     to authenticated
     using (
         (select auth.uid()) = user_id
+        and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
     );
 
 
 -- ------------------------------------------------------------
 -- 4. INSERT
 -- Solo permite crear transacciones pertenecientes
--- al usuario autenticado
+-- al usuario permanente autenticado
 -- ------------------------------------------------------------
 
 create policy "Usuarios insertan transacciones"
@@ -57,6 +58,7 @@ create policy "Usuarios insertan transacciones"
     to authenticated
     with check (
         (select auth.uid()) = user_id
+        and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
     );
 
 
@@ -72,15 +74,17 @@ create policy "Usuarios actualizan transacciones"
     to authenticated
     using (
         (select auth.uid()) = user_id
+        and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
     )
     with check (
         (select auth.uid()) = user_id
+        and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
     );
 
 
 -- ------------------------------------------------------------
 -- 6. DELETE
--- Solo permite eliminar sus propias transacciones
+-- Solo permite eliminar sus propias transacciones a usuarios permanentes
 -- ------------------------------------------------------------
 
 create policy "Usuarios eliminan transacciones"
@@ -89,6 +93,7 @@ create policy "Usuarios eliminan transacciones"
     to authenticated
     using (
         (select auth.uid()) = user_id
+        and ((select (auth.jwt()->>'is_anonymous')::boolean) is false)
     );
 
 

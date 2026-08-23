@@ -1,0 +1,100 @@
+/* ==========================================================================
+   EDICION DEL PERFIL
+   ========================================================================== */
+
+.profile-edit-field {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.profile-edit-field span {
+    display: block;
+    margin: 0 0 0.4rem 0.15rem;
+    color: var(--texto-secundario);
+    font-size: 0.78rem;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+}
+
+.profile-edit-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid
+        color-mix(
+            in srgb,
+            var(--borde-color) 85%,
+            transparent);
+    border-radius: 0.75rem;
+    outline: none;
+    background: var(--bg-tarjeta);
+    color: var(--texto-principal);
+    font-family: inherit;
+    font-size: 0.92rem;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.profile-edit-field input:hover:not(:disabled) {
+    border-color:
+        color-mix(
+            in srgb,
+            var(--color-brand) 30%,
+            var(--borde-color)
+            );
+}
+
+.profile-edit-field input:focus-visible {
+    border-color: var(--color-brand);
+    background:
+        color-mix(
+            in srgb,
+            var(--bg-tarjeta) 96%,
+            var(--color-brand-light)
+        );
+    box-shadow:
+        0 0 0 3px
+            color-mix(
+                in srgb,
+                var(--color-brand) 12%,
+                transparent
+            );
+}
+
+.profile-edit-field input:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    background:
+        color-mix(
+            in srgb,
+            var(--bg-tarjeta) 92%,
+            var(--borde-color)
+        );
+}
+
+.profile-edit-panel,
+#profile-edit-panel {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    border-radius: 0.85rem;
+}
+
+.profile-edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid
+        color-mix(
+            in srgb,
+            var(--borde-color) 65%,
+            transparent
+        );
+}
+
+#profile-photo-remove {
+    min-width: 6.875rem;
+}

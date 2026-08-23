@@ -64,12 +64,6 @@ import {
   solicitarPermiso,
   programarNotificacionCierrePeriodo,
 } from "./notifications.js";
-import {
-  actualizarGraficoEgresos,
-  renderizarDesgloseEgresos,
-  renderizarGraficoTendencia,
-  renderizarGraficoComparativa,
-} from "./modules/charts.js";
 import { inicializarCategoriasPersonalizadas } from "./modules/categories.js";
 import {
   inicializarPresupuestos,
@@ -78,6 +72,16 @@ import {
 } from "./modules/budgets.js";
 import { inicializarAuth, renderizarPanelAuth, renderizarPerfil, haySesionActiva, cerrarSesion } from "./modules/auth.js";
 import { registrarServiceWorker, configurarInstalacion } from "./pwa.js";
+
+let chartsModulePromise = null;
+
+function cargarModuloCharts() {
+  if (!chartsModulePromise) {
+    chartsModulePromise = import("./modules/charts.js");
+  }
+
+  return chartsModulePromise;
+}
 
 async function cargarTemplate(ruta, destinoId) {
   const destino = document.getElementById(destinoId);
@@ -556,11 +560,25 @@ window.cambiarPagina = cambiarPagina;
 window.exportarPDF = exportarPDF;
 window.cambiarSeccionEgresos = cambiarSeccionEgresos;
 // Función para renderizar gráficos de egresos
-window.renderizarGraficosEgresos = () => {
-  actualizarGraficoEgresos();
-  renderizarDesgloseEgresos();
-  renderizarGraficoTendencia();
-  renderizarGraficoComparativa();
+window.renderizarGraficosEgresos = async () => {
+  try {
+    const {
+      actualizarGraficoEgresos,
+      renderizarDesgloseEgresos,
+      renderizarGraficoTendencia,
+      renderizarGraficoComparativa,
+    } = await cargarModuloCharts();
+
+    renderizarDesgloseEgresos();
+    await Promise.all([
+      actualizarGraficoEgresos(),
+      renderizarGraficoTendencia(),
+      renderizarGraficoComparativa(),
+    ]);
+  } catch (error) {
+    console.error("Error renderizando grÃ¡ficos:", error);
+    mostrarToast("warning", "No se pudieron cargar los grÃ¡ficos");
+  }
 };
 
 // Exponer funciones de periodo

@@ -1,0 +1,89 @@
+/* ==========================================================================
+   RESPONSIVE DEL PERFIL
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-photo-actions label.btn-secondary,
+    .profile-edit-field input,
+    .profile-option-row {
+        transition: none;
+        animation: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-layout {
+        max-width: none;
+    }
+
+    .profile-panel {
+        padding: 1rem;
+    }
+
+    .profile-panel-title h1 {
+        font-size: 1.2rem;
+    }
+
+    .profile-card-summary {
+        gap: 0.8rem;
+        padding: 1rem;
+        border-radius: 0.9rem;
+    }
+
+    .profile-avatar-badge {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .profile-avatar-badge--lg {
+        width: 5rem;
+        height: 5rem;
+    }
+
+    .profile-photo-upload {
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .profile-option-row {
+        padding: 0.45rem 0.15rem 0.45rem 0.25rem;
+    }
+
+    .profile-option-row span {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .profile-card-summary {
+        min-height: 4.8rem;
+    }
+
+    .profile-photo-upload {
+        flex-direction: column;
+    }
+
+    .profile-photo-actions {
+        width: 100%;
+    }
+
+    .profile-photo-actions label.btn-secondary {
+        flex: 1 1 auto;
+    }
+
+    .profile-edit-actions {
+        flex-direction: column;
+    }
+
+    .profile-edit-actions > * {
+        width: 100%;
+    }
+
+    .profile-option-row {
+        gap: 0.75rem;
+    }
+
+    .profile-option-row .btn-secondary {
+        min-width: 6rem;
+    }
+}

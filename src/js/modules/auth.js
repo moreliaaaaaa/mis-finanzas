@@ -8,9 +8,12 @@ import { guardarEnStorage, obtenerDelStorage, eliminarDelStorage, definirAlcance
 import { mostrarToast, initializarIconos } from "../ui.js";
 import { getSupabaseClient } from "../supabase.js";
 import { recalcularYRenderizar } from "./dashboard.js";
+import { escapeHTML } from "../utils.js";
 
 const STORAGE_USERS = "misfinanzas_users";
 const STORAGE_SESSION = "misfinanzas_session";
+const LOCAL_PASSWORD_ALGORITHM = "pbkdf2-sha256";
+const LOCAL_PASSWORD_ITERATIONS = 210000;
 
 let ultimoErrorAuth = null;
 let ultimoTipoMensajeAuth = "";
@@ -121,14 +124,94 @@ function aplicarIdPrefixAuth(container, idPrefix) {
   });
 }
 
-async function obtenerPasswordHash(password) {
-  if (!window.crypto?.subtle) return password;
+function bytesToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function base64ToBytes(value) {
+  return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+}
+
+async function sha256Legacy(password) {
+  if (!window.crypto?.subtle) return null;
 
   const data = new TextEncoder().encode(password);
   const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(hashBuffer))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function constantTimeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  let diff = a.length ^ b.length;
+  const maxLength = Math.max(a.length, b.length);
+  for (let index = 0; index < maxLength; index += 1) {
+    diff |= (a.charCodeAt(index) || 0) ^ (b.charCodeAt(index) || 0);
+  }
+  return diff === 0;
+}
+
+async function derivarPasswordPBKDF2(password, saltBytes, iterations = LOCAL_PASSWORD_ITERATIONS) {
+  if (!window.crypto?.subtle) {
+    throw new Error("El modo local requiere Web Crypto disponible en un contexto seguro.");
+  }
+
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const bits = await window.crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      salt: saltBytes,
+      iterations,
+    },
+    keyMaterial,
+    256
+  );
+
+  return bytesToBase64(new Uint8Array(bits));
+}
+
+async function obtenerPasswordHash(password) {
+  if (!window.crypto?.subtle || !window.crypto?.getRandomValues) {
+    throw new Error("No se puede crear una cuenta local segura en este navegador.");
+  }
+
+  const salt = new Uint8Array(16);
+  window.crypto.getRandomValues(salt);
+  const hash = await derivarPasswordPBKDF2(password, salt);
+  return `${LOCAL_PASSWORD_ALGORITHM}$${LOCAL_PASSWORD_ITERATIONS}$${bytesToBase64(salt)}$${hash}`;
+}
+
+async function verificarPasswordLocal(password, user) {
+  const stored = user?.passwordHash;
+  if (!stored) return { ok: false, needsUpgrade: false };
+
+  if (stored.startsWith(`${LOCAL_PASSWORD_ALGORITHM}$`)) {
+    const [, iterationsRaw, saltRaw, hashRaw] = stored.split("$");
+    const iterations = Number.parseInt(iterationsRaw, 10);
+    if (!Number.isFinite(iterations) || !saltRaw || !hashRaw) {
+      return { ok: false, needsUpgrade: false };
+    }
+
+    const hash = await derivarPasswordPBKDF2(password, base64ToBytes(saltRaw), iterations);
+    return {
+      ok: constantTimeEqual(hash, hashRaw),
+      needsUpgrade: iterations < LOCAL_PASSWORD_ITERATIONS,
+    };
+  }
+
+  const legacyHash = await sha256Legacy(password);
+  return {
+    ok: constantTimeEqual(legacyHash, stored),
+    needsUpgrade: true,
+  };
 }
 
 function guardarSesionAuth(sessionData = {}) {
@@ -331,27 +414,34 @@ async function registrarUsuarioLocal(nombre, email, password, country = "CL") {
     return false;
   }
 
-  const userId =
-    window.crypto?.randomUUID?.() ||
-    `local_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  const user = {
-    id: userId,
-    nombre: nombre.trim(),
-    email: emailNormalizado,
-    country: countryConfig.code,
-    countryName: countryConfig.label,
-    currency: countryConfig.currency,
-    locale: countryConfig.locale,
-    passwordHash: await obtenerPasswordHash(password),
-    createdAt: new Date().toISOString(),
-    local: true,
-  };
+  try {
+    const userId =
+      window.crypto?.randomUUID?.() ||
+      `local_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const user = {
+      id: userId,
+      nombre: nombre.trim(),
+      email: emailNormalizado,
+      country: countryConfig.code,
+      countryName: countryConfig.label,
+      currency: countryConfig.currency,
+      locale: countryConfig.locale,
+      passwordHash: await obtenerPasswordHash(password),
+      createdAt: new Date().toISOString(),
+      local: true,
+    };
 
-  users[userId] = user;
-  guardarEnStorage(STORAGE_USERS, users);
-  guardarSesionAuth({ userId, userName: user.nombre, userEmail: user.email });
-  mostrarToast("success", `Cuenta local creada para ${user.nombre || user.email}`);
-  return true;
+    users[userId] = user;
+    guardarEnStorage(STORAGE_USERS, users);
+    guardarSesionAuth({ userId, userName: user.nombre, userEmail: user.email });
+    mostrarToast("success", `Cuenta local creada para ${user.nombre || user.email}`);
+    return true;
+  } catch (error) {
+    ultimoErrorAuth = error?.message || "No se pudo crear una cuenta local segura.";
+    ultimoTipoMensajeAuth = "error";
+    mostrarToast("error", ultimoErrorAuth);
+    return false;
+  }
 }
 
 export async function iniciarSesion(email, password) {
@@ -394,24 +484,6 @@ export async function iniciarSesion(email, password) {
     if (esErrorEmailNoConfirmado(errorSupabase)) {
       await reenviarConfirmacion(email);
       return false;
-    }
-
-    // Respaldo: si la cuenta se creó en modo local (antes de conectar Supabase),
-    // el usuario vive en este navegador y no existe en la nube.
-    const emailNormalizado = normalizarEmail(email);
-    const userLocal = Object.values(obtenerDelStorage(STORAGE_USERS) || {}).find(
-      (item) => item.email === emailNormalizado
-    );
-
-    if (userLocal && userLocal.passwordHash === (await obtenerPasswordHash(password))) {
-      guardarSesionAuth({
-        userId: userLocal.id,
-        userName: userLocal.nombre,
-        userEmail: userLocal.email,
-      });
-      mostrarToast("success", `Bienvenido/a ${userLocal.nombre || userLocal.email}`);
-      ultimoErrorAuth = null;
-      return true;
     }
 
     const mensaje = traducirErrorAuth(errorSupabase);
@@ -460,16 +532,32 @@ async function reenviarConfirmacion(email) {
 async function iniciarSesionLocal(email, password) {
   const users = obtenerDelStorage(STORAGE_USERS) || {};
   const emailNormalizado = normalizarEmail(email);
-  const passwordHash = await obtenerPasswordHash(password);
-  const user = Object.values(users).find(
-    (item) => item.email === emailNormalizado && item.passwordHash === passwordHash
-  );
+  const user = Object.values(users).find((item) => item.email === emailNormalizado);
+  let passwordCheck = { ok: false, needsUpgrade: false };
 
-  if (!user) {
-    ultimoErrorAuth = "No encontré esa cuenta en este dispositivo. Si la registraste en la nube, revisa que este despliegue tenga las variables de Supabase.";
+  if (user) {
+    try {
+      passwordCheck = await verificarPasswordLocal(password, user);
+    } catch (error) {
+      console.warn("No se pudo verificar la cuenta local:", error);
+    }
+  }
+
+  if (!user || !passwordCheck.ok) {
+    ultimoErrorAuth = "No encontré esa cuenta local en este dispositivo. El modo local no tiene recuperación por correo.";
     ultimoTipoMensajeAuth = "error";
     mostrarToast("error", ultimoErrorAuth);
     return false;
+  }
+
+  if (passwordCheck.needsUpgrade) {
+    try {
+      user.passwordHash = await obtenerPasswordHash(password);
+      users[user.id] = user;
+      guardarEnStorage(STORAGE_USERS, users);
+    } catch (error) {
+      console.warn("No se pudo migrar el hash local:", error);
+    }
   }
 
   guardarSesionAuth({ userId: user.id, userName: user.nombre, userEmail: user.email });
@@ -705,24 +793,32 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
 
   if (state.userId) {
     const user = obtenerUsuarioActual();
-    const avatarHtml = user?.foto
-      ? `<img src="${user.foto}" alt="Foto de perfil" class="user-avatar">`
-      : `<div class="user-avatar">${user?.nombre?.charAt(0) || "U"}</div>`;
+    const fotoSegura =
+      typeof user?.foto === "string" &&
+      /^data:image\/(?:jpeg|jpg|png|webp);base64,/i.test(user.foto)
+        ? user.foto
+        : "";
+    const nombreSeguro = escapeHTML(user?.nombre || "Usuario");
+    const emailSeguro = escapeHTML(user?.email || "");
+    const inicialSegura = escapeHTML((user?.nombre?.charAt(0) || "U").toUpperCase());
+    const avatarHtml = fotoSegura
+      ? `<img src="${fotoSegura}" alt="Foto de perfil" class="user-avatar">`
+      : `<div class="user-avatar">${inicialSegura}</div>`;
     container.innerHTML = `
       <div class="auth-panel user-panel">
         <div class="user-info">
           ${avatarHtml}
           <div class="user-details">
-            <span class="user-name">${user?.nombre || "Usuario"}</span>
-            <span class="user-email">${user?.email || ""}</span>
+            <span class="user-name">${nombreSeguro}</span>
+            <span class="user-email">${emailSeguro}</span>
           </div>
         </div>
 
         <div class="profile-card">
           <div class="profile-card-content">
             <h4>Perfil</h4>
-            <p><strong>Nombre:</strong> ${user?.nombre || "Usuario"}</p>
-            <p><strong>Email:</strong> ${user?.email || ""}</p>
+            <p><strong>Nombre:</strong> ${nombreSeguro}</p>
+            <p><strong>Email:</strong> ${emailSeguro}</p>
             <p>Tu cuenta esta activa y este panel permanece visible.</p>
           </div>
         </div>
@@ -766,7 +862,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
         </div>
         <p class="auth-copy auth-copy--brand">Crea tu cuenta o inicia sesión.</p>
         <form id="${idPrefix}-form" class="auth-form" novalidate>
-          <label class="auth-field" for="${idPrefix}-nombre">
+          <label class="auth-field auth-register-only" for="${idPrefix}-nombre" data-auth-register-only>
             <span>Nombre</span>
             <input type="text" id="${idPrefix}-nombre" name="name" placeholder="Tu nombre" autocomplete="name" maxlength="100">
           </label>
@@ -774,7 +870,7 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
             <span>Correo electrónico</span>
             <input type="email" id="${idPrefix}-email" name="email" placeholder="tu@email.com" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required>
           </label>
-          <label class="auth-field" for="${idPrefix}-country">
+          <label class="auth-field auth-register-only" for="${idPrefix}-country" data-auth-register-only>
             <span>País</span>
             <select id="${idPrefix}-country" name="country">${countryOptions}</select>
           </label>
@@ -808,10 +904,14 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
   const recoverBtn = container.querySelector("[data-auth-action='recover']");
   const togglePasswordBtn = container.querySelector("[data-auth-action='toggle-password']");
   const message = container.querySelector(".auth-message");
+  const authPanel = container.querySelector(".auth-panel");
+  const authCopy = container.querySelector(".auth-copy--brand");
   const nameInput = container.querySelector(`#${idPrefix}-nombre`);
   const emailInput = container.querySelector(`#${idPrefix}-email`);
   const countryInput = container.querySelector(`#${idPrefix}-country`);
   const passwordInput = container.querySelector(`#${idPrefix}-password`);
+  let authMode = "login";
+  const isLocalAuthMode = !getSupabaseClient();
 
   const setLoading = (isLoading) => {
     [loginBtn, signupBtn, recoverBtn].forEach((button) => {
@@ -826,6 +926,41 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
     message.textContent = text;
     message.classList.toggle("is-error", type === "error");
     message.classList.toggle("is-success", type === "success");
+  };
+
+  const setAuthMode = (mode) => {
+    const isSignup = mode === "signup";
+    authMode = isSignup ? "signup" : "login";
+
+    authPanel?.classList.toggle("is-signup", isSignup);
+    authPanel?.setAttribute("data-auth-mode", authMode);
+
+    nameInput?.toggleAttribute("required", isSignup);
+    countryInput?.toggleAttribute("required", isSignup);
+
+    if (nameInput) nameInput.disabled = !isSignup;
+    if (countryInput) countryInput.disabled = !isSignup;
+    if (passwordInput) {
+      passwordInput.autocomplete = isSignup ? "new-password" : "current-password";
+    }
+    if (authCopy) {
+      authCopy.textContent = isLocalAuthMode
+        ? isSignup
+          ? "Cuenta local en este dispositivo. Sin recuperación por correo."
+          : "Modo local en este dispositivo. Sin recuperación por correo."
+        : isSignup
+          ? "Crea tu cuenta."
+          : "Inicia sesión.";
+    }
+    if (signupBtn) {
+      signupBtn.textContent = isSignup ? "Crear cuenta" : "Registrarse";
+    }
+    if (loginBtn) {
+      loginBtn.textContent = isSignup ? "Ya tengo cuenta" : "Iniciar sesión";
+      loginBtn.type = isSignup ? "button" : "submit";
+    }
+
+    setMessage("");
   };
 
   const refreshAuthPanels = () => {
@@ -874,6 +1009,8 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
     }
   };
 
+  setAuthMode("login");
+
   togglePasswordBtn?.addEventListener("click", () => {
     if (!passwordInput || !togglePasswordBtn) return;
     const isVisible = passwordInput.type === "text";
@@ -895,10 +1032,30 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
 
   container.querySelector(`#${idPrefix}-form`)?.addEventListener("submit", (event) => {
     event.preventDefault();
+    if (authMode === "signup") {
+      runAuthAction("signup");
+      return;
+    }
+
     runAuthAction("login");
   });
 
-  signupBtn?.addEventListener("click", () => runAuthAction("signup"));
+  loginBtn?.addEventListener("click", (event) => {
+    if (authMode !== "signup") return;
+    event.preventDefault();
+    setAuthMode("login");
+    emailInput?.focus();
+  });
+
+  signupBtn?.addEventListener("click", () => {
+    if (authMode !== "signup") {
+      setAuthMode("signup");
+      nameInput?.focus();
+      return;
+    }
+
+    runAuthAction("signup");
+  });
   recoverBtn?.addEventListener("click", () => runAuthAction("recover"));
 
   // Procesar iconos Lucide del panel recién renderizado
