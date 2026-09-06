@@ -3,7 +3,8 @@
  * Plantillas y pintado de la vista de periodos financieros.
  */
 
-import { formatMoneda } from "../utils.js";
+import { formatMoneda, escapeHTML } from "../utils.js";
+import { CATEGORIAS } from "../constants.js";
 import { initializarIconos } from "../ui.js";
 
 const PERIOD_CONTAINER_SELECTOR = "#period-section, #period-section-view";
@@ -13,7 +14,7 @@ function formatearFecha(fechaStr) {
 
   const partes = fechaStr.split("-");
 
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  return escapeHTML(`${partes[2]}/${partes[1]}/${partes[0]}`);
 }
 
 function obtenerEstadoPeriodo(balance) {
@@ -173,6 +174,35 @@ function renderTarjetasPeriodo(resumen) {
   `;
 }
 
+function renderDetalleCierre(entry) {
+  const categorias = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso];
+  const movimientos = [...(entry.transactions || [])].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  const dinero = (value) => Number.isFinite(Number(value)) ? formatMoneda(Number(value)) : "&mdash;";
+  return `
+    <div class="closed-period-detail">
+      <dl class="closed-period-totals">
+        <div><dt>Ingresos</dt><dd class="text-ingreso">${dinero(entry.totalIngresos)}</dd></div>
+        <div><dt>Gastos</dt><dd class="text-egreso">${dinero(entry.totalEgresos)}</dd></div>
+        <div><dt>Balance del cierre</dt><dd>${dinero(entry.balance)}</dd></div>
+      </dl>
+      ${Number(entry.balance) > 0 ? `<p class="closed-period-saving">Añadido al ahorro: <strong>${dinero(entry.savingsAdded ?? entry.balance)}</strong>${entry.savingsAfter != null ? ` · Ahorro acumulado al cierre: <strong>${dinero(entry.savingsAfter)}</strong>` : ""}</p>` : ""}
+      <h3 class="closed-period-heading">Movimientos del periodo (${movimientos.length})</h3>
+      ${!entry.hasSnapshot ? '<p class="closed-period-note">Este cierre antiguo muestra los movimientos que siguen disponibles.</p>' : ""}
+      ${movimientos.length ? `<ul class="closed-period-movements">${movimientos.map((tx) => {
+        const ingreso = tx.tipo === "ingreso";
+        const categoria = tx.categoryLabel || categorias.find((cat) => cat.id === tx.categoria)?.label || tx.categoria || "Sin categoría";
+        return `<li class="closed-period-movement">
+          <div class="closed-period-movement-copy">
+            <span class="closed-period-movement-meta">${formatearFecha(tx.fecha)} · ${ingreso ? "Ingreso" : "Gasto"} · ${escapeHTML(categoria)}</span>
+            <span>${escapeHTML(tx.detalle || "Sin detalle")}</span>
+          </div>
+          <strong class="${ingreso ? "text-ingreso" : "text-egreso"}">${ingreso ? "+" : "−"}${dinero(tx.monto)}</strong>
+        </li>`;
+      }).join("")}</ul>` : '<p class="closed-period-note">No hay movimientos registrados para este periodo.</p>'}
+    </div>
+  `;
+}
+
 function renderItemHistorial(entry) {
   const balanceClass =
     entry.balance > 0
@@ -204,7 +234,8 @@ function renderItemHistorial(entry) {
   }
 
   return `
-    <div class="period-history-item">
+    <details class="period-history-entry" data-period-key="${escapeHTML(`${entry.start}_${entry.end}`)}">
+    <summary class="period-history-item">
 
       <div class="period-history-info">
 
@@ -224,7 +255,7 @@ function renderItemHistorial(entry) {
           </span>
 
           <span class="period-history-label">
-            ${resultado.label}
+            ${resultado.label} · Ver detalle
           </span>
 
         </div>
@@ -235,7 +266,9 @@ function renderItemHistorial(entry) {
         ${formatMoneda(Math.abs(entry.balance))}
       </span>
 
-    </div>
+    </summary>
+    ${renderDetalleCierre(entry)}
+    </details>
   `;
 }
 
@@ -317,8 +350,12 @@ export function renderizarPeriodoEnDOM(resumen) {
     }
 
     if (historial) {
+      const abiertos = new Set([...historial.querySelectorAll("[data-period-key][open]")].map((item) => item.dataset.periodKey));
       historial.innerHTML =
         renderHistorialPeriodo(resumen);
+      historial.querySelectorAll("[data-period-key]").forEach((item) => {
+        item.open = abiertos.has(item.dataset.periodKey);
+      });
     }
   });
 

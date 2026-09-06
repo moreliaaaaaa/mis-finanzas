@@ -5,6 +5,7 @@ yarn.lock
 # Construcción
 dist/
 build/
+public/templates/
 
 # Secretos y configuración local
 .env
@@ -32,3 +33,4 @@ yarn-debug.log*
 .tmp/
 temp/
 .playwright-cli/
+output/

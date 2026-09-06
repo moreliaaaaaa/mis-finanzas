@@ -33,7 +33,7 @@ const normalizarSupabaseUrl = (valor) => {
 export const ENV = {
   supabaseUrl: normalizarSupabaseUrl(viteEnv.VITE_SUPABASE_URL),
   supabaseKey: leerValorEnv(viteEnv.VITE_SUPABASE_ANON_KEY),
-  appName: leerValorEnv(viteEnv.VITE_APP_NAME) || "MisFinanzas",
+  appName: leerValorEnv(viteEnv.VITE_APP_NAME) || "Finanzas",
   appVersion: leerValorEnv(viteEnv.VITE_APP_VERSION) || "1.0.0",
 };
 

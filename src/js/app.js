@@ -30,9 +30,6 @@ import {
 } from "./storage.js";
 import {
   inicializarSupabase,
-  obtenerTransaccionesSupabase,
-  sincronizarPendientes,
-  esSupabaseConectado,
   borrarTransaccionesSupabase,
 } from "./supabase.js";
 import { MENSAJES } from "./constants.js";
@@ -72,6 +69,7 @@ import {
 } from "./modules/budgets.js";
 import { inicializarAuth, renderizarPanelAuth, renderizarPerfil, haySesionActiva, cerrarSesion } from "./modules/auth.js";
 import { registrarServiceWorker, configurarInstalacion } from "./pwa.js";
+import { iniciarSincronizacionCuenta } from "./modules/cloud-sync.js";
 
 let chartsModulePromise = null;
 
@@ -136,10 +134,12 @@ export async function initApp() {
 
     // 1.1 Inicializar autenticación
     inicializarAuth();
-    const supabaseInit = await inicializarSupabase();
+    await inicializarSupabase();
 
     // Separar el respaldo local por usuario (la sesión pudo restaurarse desde Supabase)
     definirAlcanceStorage(getState().userId || null);
+    // Recuperar el respaldo antes de que los suscriptores guarden el estado inicial.
+    cargarMovimientosLocales();
 
     window.ocultarLoginScreen = ocultarLoginScreen;
     window.mostrarLoginScreen = mostrarLoginScreen;
@@ -217,28 +217,11 @@ export async function initApp() {
       }
     });
 
-    // 10. Cargar datos (Supabase si está configurado, si no modo local)
-    if (supabaseInit) {
-      mostrarToast("info", "Conectado a la nube ☁️");
-      const transaccionesNube = await obtenerTransaccionesSupabase();
-      const cleanStart = localStorage.getItem("misfinanzas_clean_start") === "true";
-
-      if (cleanStart) {
-        localStorage.removeItem("misfinanzas_clean_start");
-        setState({ transactions: [] });
-      } else if (transaccionesNube.length > 0) {
-        setState({ transactions: transaccionesNube });
-      } else {
-        // Nube vacía: cuenta nueva empieza vacía, o se recupera el respaldo local de este usuario
-        cargarMovimientosLocales();
-      }
-
-      // Subir movimientos que quedaron sin sincronizar
-      sincronizarPendientes();
-    } else {
-      mostrarToast("info", MENSAJES.info.modoLocal);
-      cargarMovimientosLocales();
-    }
+    // 10. La nube es compartida; el respaldo local permite continuar sin conexión.
+    await iniciarSincronizacionCuenta(() => {
+      recalcularYRenderizar();
+      renderizarSeccionPeriodo();
+    });
 
     // 11. Re-renderizar tras cargar datos
     recalcularYRenderizar();
@@ -255,7 +238,7 @@ export async function initApp() {
       setTimeout(() => irAEgresos(), 300);
     }
   } catch (error) {
-    console.error("❌ Error inicializando app:", error);
+    console.error("Error inicializando app:", error);
     mostrarToast("error", "Error al inicializar la aplicación");
   }
 }
@@ -367,14 +350,11 @@ function setupEventListeners() {
 
   // Detectar conexión/desconexión
   window.addEventListener("online", () => {
-    mostrarToast("success", "Conectado a internet 🌐");
-    if (esSupabaseConectado()) {
-      sincronizarPendientes();
-    }
+    mostrarToast("success", "Conectado a internet");
   });
 
   window.addEventListener("offline", () => {
-    mostrarToast("warning", "Desconectado de internet ⚠️");
+    mostrarToast("warning", "Desconectado de internet");
   });
 
   // Búsqueda de movimientos
@@ -576,8 +556,8 @@ window.renderizarGraficosEgresos = async () => {
       renderizarGraficoComparativa(),
     ]);
   } catch (error) {
-    console.error("Error renderizando grÃ¡ficos:", error);
-    mostrarToast("warning", "No se pudieron cargar los grÃ¡ficos");
+    console.error("Error renderizando graficos:", error);
+    mostrarToast("warning", "No se pudieron cargar los graficos");
   }
 };
 

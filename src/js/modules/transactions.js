@@ -14,7 +14,7 @@ import {
   guardarTransaccionSupabase,
   actualizarTransaccionSupabase,
   eliminarTransaccionSupabase,
-  esSupabaseConectado,
+  getSupabaseClient,
 } from "../supabase.js";
 import {
   mostrarToast,
@@ -66,7 +66,7 @@ export async function guardarRegistro() {
       // Modo edición
       updateTransaction(editId, transaccionData);
 
-      if (esSupabaseConectado()) {
+      if (getSupabaseClient()) {
         await actualizarTransaccionSupabase(editId, transaccionData);
       }
 
@@ -77,7 +77,7 @@ export async function guardarRegistro() {
       const newTx = { id: newId, ...transaccionData };
       addTransaction(newTx);
 
-      if (esSupabaseConectado()) {
+      if (getSupabaseClient()) {
         await guardarTransaccionSupabase(newTx);
       }
 
@@ -161,7 +161,7 @@ export async function eliminarRegistro(id) {
   // Eliminar inmediatamente del estado
   deleteTransaction(id);
 
-  if (esSupabaseConectado()) {
+  if (getSupabaseClient()) {
     await eliminarTransaccionSupabase(id);
   }
 
@@ -171,9 +171,10 @@ export async function eliminarRegistro(id) {
   mostrarToast("warning", "Registro eliminado", {
     duracion: 8000,
     textoAccion: "Deshacer",
-    accion: () => {
+    accion: async () => {
       // Restaurar la transacción
       addTransaction(transaction);
+      if (getSupabaseClient()) await guardarTransaccionSupabase(transaction);
       recalcularYRenderizar();
       mostrarToast("success", "Registro restaurado");
     },

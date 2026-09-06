@@ -215,6 +215,7 @@ async function verificarPasswordLocal(password, user) {
 }
 
 function guardarSesionAuth(sessionData = {}) {
+  const previousUserId = getState().userId;
   const session = {
     userId: sessionData.userId || null,
     userName: sessionData.userName || null,
@@ -247,6 +248,9 @@ function guardarSesionAuth(sessionData = {}) {
     userId: session.userId,
     userName: session.userName,
     userEmail: session.userEmail,
+    ...(previousUserId !== session.userId
+      ? { transactions: obtenerDelStorage("transactions") || [] }
+      : {}),
   });
 
   return session;
@@ -964,9 +968,8 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
   };
 
   const refreshAuthPanels = () => {
-    renderizarPerfil();
-    recalcularYRenderizar();
-    window.ocultarLoginScreen?.();
+    // Reinicializar período, respaldo y sincronización bajo la nueva cuenta.
+    window.location.reload();
   };
 
   const runAuthAction = async (action) => {

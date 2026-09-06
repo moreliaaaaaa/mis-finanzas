@@ -1,5 +1,18 @@
 # MisFinanzas - Control Inteligente de Finanzas
 
+## Dónde editar las plantillas
+
+Para activar la sincronización de períodos y movimientos entre dispositivos,
+consulta [Sincronización](docs/Sincronizacion.md).
+
+- Edita los HTML de las vistas en `src/templates/`.
+- `public/templates/` contiene copias generadas: no edites esa carpeta.
+- `npm run dev` y `npm run build` regeneran las copias automáticamente. Durante el desarrollo, guardar, crear o eliminar un HTML en `src/templates/` actualiza la copia y recarga la página.
+- Mantén los archivos HTML directamente en `src/templates/`, sin subcarpetas.
+- `dist/` es la salida de producción generada por Vite.
+
+Las vistas siguen cargándose desde `/templates/`; no necesitas cambiar sus rutas.
+
 Aplicación web moderna y responsive para gestionar ingresos, gastos del hogar y taller de costura. Construida con **CSS Puro**, **JavaScript Modular** y **Vite**.
 
 ## ✨ Características Principales

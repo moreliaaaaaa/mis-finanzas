@@ -36,33 +36,63 @@ function guardarPendientes(pendientes) {
   guardarEnStorage(STORAGE_PENDIENTES, pendientes);
 }
 
-function encolarPendiente(accion, id) {
-  const pendientes = obtenerPendientes();
-  if (pendientes.some((item) => item.accion === accion && item.id === id)) return;
+let pendingSync = null;
 
-  pendientes.push({ accion, id });
-  guardarPendientes(pendientes);
-  mostrarToast(
-    "warning",
-    "Guardado en este dispositivo. Se sincronizará con la nube cuando haya conexión."
-  );
+export function listarPendientes() { return obtenerPendientes(); }
+
+async function guardarOperacionPendiente(accion, id, data) {
+  if (!isSupabaseConfigured() || !getState().userId) return false;
+  const token = crypto.randomUUID();
+  const previous = obtenerPendientes().find((item) => item.id === id);
+  // Una edición de una inserción aún pendiente sigue siendo una inserción.
+  if (accion === "update" && previous?.accion === "insert") accion = "insert";
+  guardarPendientes([
+    ...obtenerPendientes().filter((item) => item.id !== id),
+    { accion, id, data, token },
+  ]);
+  await sincronizarPendientes();
+  const saved = !obtenerPendientes().some((item) => item.token === token);
+  if (!saved) mostrarToast("warning", "Guardado en este dispositivo. Pendiente de sincronizar con la nube.");
+  return saved;
 }
 
-function quitarPendiente(accion, id) {
-  const pendientes = obtenerPendientes().filter(
-    (item) => !(item.accion === accion && item.id === id)
-  );
-  guardarPendientes(pendientes);
-}
-
-async function existeEnNube(id) {
+async function subirPendientes() {
   if (!supabaseClient) return false;
-  const { data } = await supabaseClient
-    .from("transacciones")
-    .select("id")
-    .eq("id", id)
-    .maybeSingle();
-  return !!data;
+  let userId;
+  try { userId = await requerirSesionSupabase(); }
+  catch { return false; }
+  if (getState().userId !== userId) return false;
+  for (const item of [...obtenerPendientes()]) {
+    if (getState().userId !== userId) return false;
+    try {
+      const data = item.data || getState().transactions.find((tx) => tx.id === item.id);
+      let result;
+      if (item.accion === "delete") {
+        result = await supabaseClient.from("transacciones").delete()
+          .eq("id", item.id).eq("user_id", userId);
+      } else if (data) {
+        const payload = Object.fromEntries(["id", "tipo", "categoria", "monto", "fecha", "detalle", "timestamp"]
+          .filter((key) => data[key] !== undefined).map((key) => [key, data[key]]));
+        if (item.accion === "insert") {
+          result = await supabaseClient.from("transacciones")
+            .upsert({ ...payload, user_id: userId }, { onConflict: "id" });
+        } else {
+          result = await supabaseClient.from("transacciones").update(payload)
+            .eq("id", item.id).eq("user_id", userId).select("id");
+          if (!result.error && result.data.length === 0) throw new Error("El movimiento ya no existe en la nube.");
+        }
+      } else {
+        throw new Error("Falta el contenido del movimiento pendiente.");
+      }
+      if (result.error) throw result.error;
+      if (getState().userId !== userId) return false;
+      guardarPendientes(obtenerPendientes().filter((pending) =>
+        !(pending.id === item.id && pending.accion === item.accion && pending.token === item.token)));
+    } catch (error) {
+      console.warn("Movimiento pendiente de sincronizar:", error.message);
+    }
+  }
+  return obtenerPendientes().length === 0;
 }
 
 async function asegurarSesionSupabase() {
@@ -180,22 +210,7 @@ export function esSupabaseConectado() {
  * @returns {Promise<boolean>}
  */
 export async function guardarTransaccionSupabase(transaction) {
-  if (!esSupabaseConectado()) return false;
-
-  try {
-    const userId = await requerirSesionSupabase();
-    const { error } = await supabaseClient
-      .from("transacciones")
-      .insert([{ ...transaction, user_id: userId }]);
-
-    if (error) throw error;
-
-    return true;
-  } catch (error) {
-    console.error("Error guardando transacción:", error);
-    encolarPendiente("insert", transaction.id);
-    return false;
-  }
+  return guardarOperacionPendiente("insert", transaction.id, transaction);
 }
 
 /**
@@ -205,24 +220,8 @@ export async function guardarTransaccionSupabase(transaction) {
  * @returns {Promise<boolean>}
  */
 export async function actualizarTransaccionSupabase(id, updates) {
-  if (!esSupabaseConectado()) return false;
-
-  try {
-    const activeUserId = await requerirSesionSupabase();
-    const { error } = await supabaseClient
-      .from("transacciones")
-      .update(updates)
-      .eq("id", id)
-      .eq("user_id", activeUserId);
-
-    if (error) throw error;
-
-    return true;
-  } catch (error) {
-    console.error("Error actualizando transacción:", error);
-    encolarPendiente("update", id);
-    return false;
-  }
+  const transaction = getState().transactions.find((tx) => tx.id === id);
+  return guardarOperacionPendiente("update", id, { ...transaction, ...updates });
 }
 
 /**
@@ -231,24 +230,7 @@ export async function actualizarTransaccionSupabase(id, updates) {
  * @returns {Promise<boolean>}
  */
 export async function eliminarTransaccionSupabase(id) {
-  if (!esSupabaseConectado()) return false;
-
-  try {
-    const activeUserId = await requerirSesionSupabase();
-    const { error } = await supabaseClient
-      .from("transacciones")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", activeUserId);
-
-    if (error) throw error;
-
-    return true;
-  } catch (error) {
-    console.error("Error eliminando transacción:", error);
-    encolarPendiente("delete", id);
-    return false;
-  }
+  return guardarOperacionPendiente("delete", id);
 }
 
 /**
@@ -293,69 +275,9 @@ export async function borrarTransaccionesSupabase(transactions = getState().tran
  * @returns {Promise<boolean>}
  */
 export async function sincronizarPendientes() {
-  if (!esSupabaseConectado()) return false;
-  let activeUserId;
-  try {
-    activeUserId = await requerirSesionSupabase();
-  } catch (error) {
-    console.warn("SincronizaciÃ³n omitida: no hay sesiÃ³n real de Supabase.", error);
-    return false;
-  }
-
-  const pendientes = [...obtenerPendientes()];
-  if (pendientes.length === 0) return true;
-
-  let sincronizados = 0;
-
-  for (const pendiente of pendientes) {
-    const transaccion = getState().transactions.find(
-      (tx) => tx.id === pendiente.id
-    );
-
-    try {
-      if (pendiente.accion === "insert" && transaccion) {
-        const yaExiste = await existeEnNube(transaccion.id);
-        if (yaExiste) {
-          quitarPendiente("insert", pendiente.id);
-          sincronizados++;
-          continue;
-        }
-        const { error } = await supabaseClient
-          .from("transacciones")
-          .insert([{ ...transaccion, user_id: activeUserId }]);
-        if (error) throw error;
-        quitarPendiente("insert", pendiente.id);
-        sincronizados++;
-      } else if (pendiente.accion === "update" && transaccion) {
-        const { user_id, ...payload } = transaccion;
-        const { error } = await supabaseClient
-          .from("transacciones")
-          .update(payload)
-          .eq("id", transaccion.id)
-          .eq("user_id", activeUserId);
-        if (error) throw error;
-        quitarPendiente("update", pendiente.id);
-        sincronizados++;
-      } else if (pendiente.accion === "delete") {
-        const { error } = await supabaseClient
-          .from("transacciones")
-          .delete()
-          .eq("id", pendiente.id)
-          .eq("user_id", activeUserId);
-        if (error) throw error;
-        quitarPendiente("delete", pendiente.id);
-        sincronizados++;
-      }
-    } catch (error) {
-      console.warn("Pendiente aun no sincronizado:", pendiente, error);
-    }
-  }
-
-  if (sincronizados > 0) {
-    mostrarToast("success", `Sincronizado con la nube (${sincronizados} movimiento(s))`);
-  }
-
-  return sincronizados > 0;
+  if (pendingSync) return pendingSync;
+  pendingSync = subirPendientes().finally(() => { pendingSync = null; });
+  return pendingSync;
 }
 
 /**
@@ -363,43 +285,17 @@ export async function sincronizarPendientes() {
  * @returns {Promise<array>}
  */
 export async function obtenerTransaccionesSupabase() {
-  if (!esSupabaseConectado()) return [];
-
-  try {
-    await requerirSesionSupabase();
-    const { data, error } = await supabaseClient
-      .from("transacciones")
-      .select("*")
-      .order("fecha", { ascending: false });
-
+  const userId = await requerirSesionSupabase();
+  const rows = [];
+  const pageSize = 500;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabaseClient.from("transacciones")
+      .select("*").eq("user_id", userId)
+      .order("fecha", { ascending: false }).order("id")
+      .range(offset, offset + pageSize - 1);
     if (error) throw error;
-
-    return data || [];
-  } catch (error) {
-    console.error("Error obteniendo transacciones:", error);
-    return [];
-  }
-}
-
-/**
- * Suscribe a cambios en transacciones (realtime)
- * @param {function} callback
- */
-export function suscribirATransacciones(callback) {
-  if (!esSupabaseConectado()) return null;
-
-  try {
-    const subscription = supabaseClient
-      .from("transacciones")
-      .on("*", (payload) => {
-        callback(payload);
-      })
-      .subscribe();
-
-    return subscription;
-  } catch (error) {
-    console.error("Error suscribiendo a transacciones:", error);
-    return null;
+    rows.push(...data);
+    if (data.length < pageSize) return rows;
   }
 }
 
@@ -447,7 +343,6 @@ export default {
   eliminarTransaccionSupabase,
   obtenerTransaccionesSupabase,
   sincronizarPendientes,
-  suscribirATransacciones,
   desuscribirse,
   obtenerEstadoConexion,
   desconectarSupabase,

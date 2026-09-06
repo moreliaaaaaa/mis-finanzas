@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
+import { templatesPlugin } from "./scripts/templates-plugin.mjs";
 
 export default defineConfig({
+  plugins: [templatesPlugin()],
   root: ".",
   base: "/",
   build: {

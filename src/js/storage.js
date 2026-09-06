@@ -205,10 +205,15 @@ export function obtenerTema() {
  * Guarda los datos del periodo en LocalStorage
  * @param {object} periodData - { periodDay, savings, debt, currentPeriodStart, currentPeriodEnd, periodHistory }
  */
-export function guardarPeriodoStorage(periodData) {
+export function guardarPeriodoStorage(periodData, sync = null) {
   try {
     const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
     localStorage.setItem(fullKey, JSON.stringify(periodData));
+    const previous = obtenerDelStorage("period_sync") || {};
+    guardarEnStorage("period_sync", sync || { ...previous, pending: true });
+    if (!sync && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("financial-period-change"));
+    }
     return true;
   } catch (error) {
     console.error("Error guardando periodo:", error);

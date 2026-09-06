@@ -9,9 +9,9 @@ import {
   guardarPeriodoStorage,
   obtenerPeriodoStorage,
 } from "../storage.js";
-import { PERIOD_CONFIG } from "../constants.js";
+import { PERIOD_CONFIG, CATEGORIAS } from "../constants.js";
 import { mostrarToast } from "../ui.js";
-import { recalcularYRenderizar } from "./dashboard.js";
+import { recalcularYRenderizar, limpiarFiltros } from "./dashboard.js";
 import { renderizarPeriodoEnDOM } from "./periods-render.js";
 
 
@@ -533,6 +533,15 @@ export function cerrarPeriodo() {
 
   /* Crear registro histórico */
 
+  const categorias = [...CATEGORIAS.ingreso, ...CATEGORIAS.egreso, ...(state.customCategories || [])];
+  // Una copia del cierre conserva el detalle aunque después cambie un registro.
+  const movimientosCerrados = transactions
+    .filter((tx) => tx.fecha >= currentPeriodStart && tx.fecha <= currentPeriodEnd)
+    .map((tx) => ({
+      ...tx,
+      categoryLabel: categorias.find((cat) => cat.id === tx.categoria)?.label || tx.categoria,
+    }));
+
   const nuevaEntrada = {
     id: generarId(),
 
@@ -546,6 +555,11 @@ export function cerrarPeriodo() {
 
     balance,
     result: tipoResultado,
+    transactions: movimientosCerrados,
+    savingsAdded: Math.max(0, balance),
+    savingsAfter: newSavings,
+    debtAdded: Math.max(0, -balance),
+    debtAfter: newDebt,
 
     closedAt: new Date().toISOString(),
   };
@@ -598,7 +612,7 @@ export function cerrarPeriodo() {
   if (balance > 0) {
     mostrarToast(
       "success",
-      `Periodo cerrado. Balance positivo: +${balanceFormateado}`
+      `Periodo cerrado. ${balanceFormateado} añadidos al ahorro. Comienza un nuevo periodo.`
     );
   } else if (balance < 0) {
     mostrarToast(
@@ -615,6 +629,7 @@ export function cerrarPeriodo() {
 
   /* Refrescar interfaz */
 
+  limpiarFiltros();
   recalcularYRenderizar();
   renderizarSeccionPeriodo();
 }
@@ -669,7 +684,13 @@ export function obtenerResumenPeriodo() {
     totalTransactions:
       transactions.length,
 
-    periodHistory,
+    periodHistory: periodHistory.map((entry) => ({
+      ...entry,
+      hasSnapshot: Array.isArray(entry.transactions),
+      transactions: Array.isArray(entry.transactions)
+        ? entry.transactions
+        : transactions.filter((tx) => tx.fecha >= entry.start && tx.fecha <= entry.end),
+    })),
   };
 }
 

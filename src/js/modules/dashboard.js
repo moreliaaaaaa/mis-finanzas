@@ -35,7 +35,7 @@ export function recalcularYRenderizar() {
  * Si no hay periodo configurado, considera todas las transacciones.
  * @returns {{ingresos: number, egresos: number, balance: number}}
  */
-function calcularSaldosPeriodo() {
+export function calcularSaldosPeriodo() {
   const state = getState();
   const tienePeriodo = !!(state.currentPeriodStart && state.currentPeriodEnd);
   let ingresos = 0;
