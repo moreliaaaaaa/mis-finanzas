@@ -27,5 +27,7 @@ export function periodoValido(period) {
   return !!period && Number.isInteger(period.periodDay) && period.periodDay >= 1 &&
     period.periodDay <= 28 && date(period.currentPeriodStart) && date(period.currentPeriodEnd) &&
     period.currentPeriodStart <= period.currentPeriodEnd &&
-    Number.isFinite(period.savings) && Number.isFinite(period.debt) && Array.isArray(period.periodHistory);
+    Number.isFinite(period.savings) && Number.isFinite(period.debt) && Array.isArray(period.periodHistory) &&
+    (period.savingsTransfers === undefined || (Array.isArray(period.savingsTransfers) && period.savingsTransfers.every((item) =>
+      item && typeof item.id === "string" && date(item.fecha) && Number.isFinite(item.monto) && item.monto > 0)));
 }

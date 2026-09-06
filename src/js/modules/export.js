@@ -47,6 +47,9 @@ export function exportarCSV() {
       t.detalle || "Sin detalle",
     ]);
   });
+  (state.savingsTransfers || []).forEach((item) => {
+    rows.push([item.id, item.fecha, "transferencia_ahorro", "Ahorro al balance", item.monto, item.detalle || "Uso de ahorro"]);
+  });
 
   const csvContent = `\uFEFF${rows.map((row) => row.map(celdaCSV).join(",")).join("\n")}\n`;
 
@@ -73,6 +76,9 @@ export function exportarJSON() {
     exportDate: new Date().toISOString(),
     transactionCount: state.transactions.length,
     transactions: state.transactions,
+    savings: state.savings,
+    savingsTransfers: state.savingsTransfers || [],
+    periodHistory: state.periodHistory,
   };
 
   const jsonContent = JSON.stringify(data, null, 2);
@@ -182,6 +188,14 @@ export function exportarPDF() {
 
   const balance = totalIngresos - totalEgresos;
 
+  const transferenciasHTML = (state.savingsTransfers || []).length ? `
+    <section style="margin-top:2rem">
+      <h2 style="font-size:1.1rem;margin-bottom:0.5rem">Transferencias desde ahorro</h2>
+      <p style="font-size:0.8rem;margin-bottom:1rem">Movimientos internos: no aumentan los ingresos totales del reporte.</p>
+      <table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th></tr></thead>
+      <tbody>${state.savingsTransfers.map((item) => `<tr><td>${escapeHTML(formatearFechaTexto(item.fecha))}</td><td>${escapeHTML(item.detalle || "Uso de ahorro")}</td><td style="text-align:right">${escapeHTML(formatMoneda(item.monto))}</td></tr>`).join("")}</tbody></table>
+    </section>` : "";
+
   // Generar HTML del reporte
   let tablaHTML = "";
   state.transactions.forEach((t) => {
@@ -266,6 +280,7 @@ export function exportarPDF() {
           ${tablaHTML}
         </tbody>
       </table>
+      ${transferenciasHTML}
       <div class="footer">
         <p>MisFinanzas - Control inteligente de finanzas | ${state.transactions.length} transacciones</p>
       </div>

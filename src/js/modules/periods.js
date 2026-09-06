@@ -14,6 +14,7 @@ import { mostrarToast } from "../ui.js";
 import { recalcularYRenderizar, limpiarFiltros } from "./dashboard.js";
 import { renderizarPeriodoEnDOM } from "./periods-render.js";
 import { fechaLocalISO } from "./period-dates.js";
+import { prepararTransferencia, sumarTransferencias, transferenciasDelPeriodo } from "./savings-core.js";
 
 
 /* ==========================================================================
@@ -117,6 +118,7 @@ function crearEstadoPeriodoBase(
   return {
     periodDay: day,
     savings: 0,
+    savingsTransfers: [],
     debt: 0,
     currentPeriodStart: periodStart,
     currentPeriodEnd: periodEnd,
@@ -131,9 +133,10 @@ function guardarEstadoPeriodo(stateOverrides = {}) {
     ...stateOverrides,
   };
 
-  guardarPeriodoStorage({
+  return guardarPeriodoStorage({
     periodDay: state.periodDay,
     savings: state.savings,
+    savingsTransfers: state.savingsTransfers || [],
     debt: state.debt,
     currentPeriodStart: state.currentPeriodStart,
     currentPeriodEnd: state.currentPeriodEnd,
@@ -287,6 +290,7 @@ export function inicializarPeriodo() {
   const restoredState = {
     periodDay,
 
+    savingsTransfers: Array.isArray(savedPeriod.savingsTransfers) ? savedPeriod.savingsTransfers : [],
     savings: Number.isFinite(Number(savedPeriod.savings))
       ? Number(savedPeriod.savings)
       : 0,
@@ -511,13 +515,16 @@ export function cerrarPeriodo({ automatico = false } = {}) {
     totalIngresos,
     totalEgresos,
     transactionCount,
-    balance,
+    balance: operatingBalance,
   } = calcularTotalesPeriodo(
     transactions,
     currentPeriodStart,
     currentPeriodEnd
   );
 
+  const transfers = transferenciasDelPeriodo(state.savingsTransfers || [], currentPeriodStart, currentPeriodEnd);
+  const fromSavings = sumarTransferencias(transfers);
+  const balance = operatingBalance + fromSavings;
 
   let newSavings = savings;
   let newDebt = debt;
@@ -555,6 +562,9 @@ export function cerrarPeriodo({ automatico = false } = {}) {
     transactionCount,
 
     balance,
+    operatingBalance,
+    fromSavings,
+    savingsTransfers: transfers.map((item) => ({ ...item })),
     result: tipoResultado,
     transactions: movimientosCerrados,
     savingsAdded: Math.max(0, balance),
@@ -694,7 +704,9 @@ export function obtenerResumenPeriodo() {
 
     totalIngresos: totales.totalIngresos,
     totalEgresos: totales.totalEgresos,
-    balance: totales.balance,
+    balance: totales.balance + sumarTransferencias(state.savingsTransfers || [], state.currentPeriodStart, state.currentPeriodEnd),
+    fromSavings: sumarTransferencias(state.savingsTransfers || [], state.currentPeriodStart, state.currentPeriodEnd),
+    savingsTransfers: transferenciasDelPeriodo(state.savingsTransfers || [], state.currentPeriodStart, state.currentPeriodEnd),
 
     savings: Number(state.savings) || 0,
     debt: Number(state.debt) || 0,
@@ -729,6 +741,22 @@ export function renderizarSeccionPeriodo() {
   const resumen = obtenerResumenPeriodo();
 
   renderizarPeriodoEnDOM(resumen);
+}
+
+export function transferirAhorro({ monto, fecha = fechaLocalISO(), detalle = "" }) {
+  try {
+    const updates = prepararTransferencia(getState(), { monto, fecha, detalle, id: generarId(), today: fechaLocalISO() });
+    // El retiro y su registro se guardan juntos en el estado del período.
+    if (!guardarEstadoPeriodo(updates)) throw new Error("No se pudo guardar la transferencia en este dispositivo.");
+    setState(updates);
+    recalcularYRenderizar();
+    renderizarSeccionPeriodo();
+    mostrarToast("success", "Ahorro transferido al balance. Registra el gasto por separado si aún no lo hiciste.");
+    return true;
+  } catch (error) {
+    mostrarToast("error", error.message);
+    return false;
+  }
 }
 
 

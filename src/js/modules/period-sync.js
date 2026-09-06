@@ -51,8 +51,8 @@ export async function sincronizarPeriodoCuenta(client, userId) {
   }
   guardarPeriodoStorage(remote.datos, { revision: remote.revision, pending: false });
   if (different) {
-    const { periodDay, savings, debt, currentPeriodStart, currentPeriodEnd, periodHistory } = remote.datos;
-    setState({ periodDay, savings, debt, currentPeriodStart, currentPeriodEnd, periodHistory });
+    const { periodDay, savings, debt, currentPeriodStart, currentPeriodEnd, periodHistory, savingsTransfers = [] } = remote.datos;
+    setState({ periodDay, savings, debt, currentPeriodStart, currentPeriodEnd, periodHistory, savingsTransfers });
   }
   return { changed: different, conflict: different && meta.pending && meta.revision != null };
 }

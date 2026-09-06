@@ -5,6 +5,7 @@
 
 import { formatMoneda, escapeHTML } from "../utils.js";
 import { CATEGORIAS } from "../constants.js";
+import { fechaLocalISO } from "./period-dates.js";
 import { initializarIconos } from "../ui.js";
 
 const PERIOD_CONTAINER_SELECTOR = "#period-section, #period-section-view";
@@ -171,7 +172,36 @@ function renderTarjetasPeriodo(resumen) {
       </div>
 
     </div>
+    <details class="savings-transfer-panel">
+      <summary>Usar ahorro</summary>
+      <p>Transfiere dinero de tus ahorros al balance del período. Registra el gasto por separado.</p>
+      <form data-savings-transfer-form>
+        <label>Monto a transferir
+          <input name="monto" type="number" inputmode="decimal" min="0.01" max="${resumen.savings}" step="0.01" required placeholder="Ej.: 150000">
+        </label>
+        <label>Fecha
+          <input name="fecha" type="date" min="${escapeHTML(resumen.periodStart || "")}" max="${fechaLocalISO()}" value="${fechaLocalISO()}" required>
+        </label>
+        <label>Detalle
+          <input name="detalle" type="text" maxlength="250" placeholder="Ej.: cubrir compra de materiales">
+        </label>
+        <p class="savings-transfer-available">Disponible en ahorro: <strong>${formatMoneda(resumen.savings)}</strong></p>
+        <button type="submit" class="btn-period-close" ${resumen.savings <= 0 ? "disabled" : ""}>Transferir al balance</button>
+      </form>
+    </details>
+    ${renderTransferencias(resumen.savingsTransfers)}
   `;
+}
+
+function renderTransferencias(transfers = []) {
+  if (!transfers.length) return "";
+  return `<section class="savings-transfer-history">
+    <h3 class="closed-period-heading">Transferencias desde ahorro (${transfers.length})</h3>
+    <ul class="closed-period-movements">${[...transfers].reverse().map((item) => `<li class="closed-period-movement">
+      <div class="closed-period-movement-copy"><span class="closed-period-movement-meta">${formatearFecha(item.fecha)} · Ahorro → balance</span><span>${escapeHTML(item.detalle || "Uso de ahorro")}</span></div>
+      <strong>${formatMoneda(item.monto)}</strong>
+    </li>`).join("")}</ul>
+  </section>`;
 }
 
 function renderDetalleCierre(entry) {
@@ -185,6 +215,8 @@ function renderDetalleCierre(entry) {
         <div><dt>Gastos</dt><dd class="text-egreso">${dinero(entry.totalEgresos)}</dd></div>
         <div><dt>Balance del cierre</dt><dd>${dinero(entry.balance)}</dd></div>
       </dl>
+      ${entry.fromSavings > 0 ? `<p class="closed-period-saving">Transferido desde ahorro: <strong>${dinero(entry.fromSavings)}</strong>. Incluido en el balance del cierre.</p>` : ""}
+      ${renderTransferencias(entry.savingsTransfers)}
       ${Number(entry.balance) > 0 ? `<p class="closed-period-saving">Añadido al ahorro: <strong>${dinero(entry.savingsAdded ?? entry.balance)}</strong>${entry.savingsAfter != null ? ` · Ahorro acumulado al cierre: <strong>${dinero(entry.savingsAfter)}</strong>` : ""}</p>` : ""}
       <h3 class="closed-period-heading">Movimientos del periodo (${movimientos.length})</h3>
       ${!entry.hasSnapshot ? '<p class="closed-period-note">Este cierre antiguo muestra los movimientos que siguen disponibles.</p>' : ""}
@@ -345,8 +377,24 @@ export function renderizarPeriodoEnDOM(resumen) {
     }
 
     if (tarjetas) {
+      const previous = tarjetas.querySelector("[data-savings-transfer-form]");
+      const values = previous ? Object.fromEntries(new FormData(previous)) : null;
+      const wasOpen = tarjetas.querySelector(".savings-transfer-panel")?.open;
       tarjetas.innerHTML =
         renderTarjetasPeriodo(resumen);
+      const panel = tarjetas.querySelector(".savings-transfer-panel");
+      const form = tarjetas.querySelector("[data-savings-transfer-form]");
+      if (wasOpen) panel.open = true;
+      if (values) Object.entries(values).forEach(([name, value]) => { form.elements[name].value = value; });
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const payload = Object.fromEntries(new FormData(form));
+        // Vaciar antes del repintado evita repetir accidentalmente el mismo retiro.
+        form.reset();
+        if (!window.transferirAhorro(payload)) {
+          Object.entries(payload).forEach(([name, value]) => { form.elements[name].value = value; });
+        }
+      });
     }
 
     if (historial) {

@@ -67,7 +67,7 @@ beforeEach(() => {
   globalThis.window = { dispatchEvent: () => {} };
   api.definirAlcanceStorage("period-test");
   api.setState({ transactions: structuredClone(transactions), currentPeriodStart: "2026-08-06", currentPeriodEnd: "2026-09-05",
-    periodDay: 5, periodHistory: [], savings: 100000, debt: 0, customCategories: [],
+    periodDay: 5, periodHistory: [], savings: 100000, savingsTransfers: [], debt: 0, customCategories: [],
     filtroHistorial: "egreso", filtroFechaInicio: "2026-08-06", filtroFechaFin: "2026-09-05", busquedaTexto: "mes", paginaActual: 3 });
 });
 
@@ -151,4 +151,41 @@ test("el cambio de año conserva los límites del periodo y el historial al reca
   assert.equal(api.getState().currentPeriodEnd, "2027-02-05");
   assert.equal(api.getState().periodHistory.length, 1);
   assert.equal(api.getState().savings, 100000);
+});
+
+test("transferir ahorro cubre un gasto ya registrado sin cambiar ingresos ni gastos", () => {
+  api.setState({ currentPeriodStart: "2026-09-05", currentPeriodEnd: "2099-10-04", savings: 405000, transactions: [
+    { id: "income", fecha: "2026-09-05", tipo: "ingreso", monto: 300000 },
+    { id: "previous-expense", fecha: "2026-09-05", tipo: "egreso", monto: 100000 },
+    { id: "expense", fecha: "2026-09-06", tipo: "egreso", monto: 350000 },
+  ] });
+  assert.equal(api.transferirAhorro({ monto: 150000, fecha: "2026-09-06", detalle: "Cubrir gasto" }), true);
+  assert.equal(api.getState().savings, 255000);
+  assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 300000, egresos: 450000, balance: 0 });
+  assert.equal(api.getState().transactions.length, 3);
+  assert.equal(api.getState().savingsTransfers.length, 1);
+  assert.equal(api.obtenerPeriodoStorage().savingsTransfers[0].monto, 150000);
+  api.cerrarPeriodo();
+  assert.equal(api.getState().savings, 255000);
+  assert.equal(api.getState().debt, 0);
+  assert.equal(api.getState().periodHistory[0].fromSavings, 150000);
+  assert.equal(api.getState().periodHistory[0].savingsTransfers.length, 1);
+});
+
+test("el ahorro transferido sin gastar vuelve al ahorro al cerrar, sin crear dinero", () => {
+  api.setState({ currentPeriodStart: "2026-09-05", currentPeriodEnd: "2099-10-04", savings: 405000, transactions: [] });
+  assert.equal(api.transferirAhorro({ monto: 150000, fecha: "2026-09-06" }), true);
+  assert.equal(api.getState().savings, 255000);
+  assert.equal(api.calcularSaldosPeriodo(new Date(2026, 8, 6)).balance, 150000);
+  api.cerrarPeriodo();
+  assert.equal(api.getState().savings, 405000);
+  assert.equal(api.getState().periodHistory[0].savingsAdded, 150000);
+  assert.equal(api.calcularSaldosPeriodo(new Date(2026, 8, 6)).balance, 0);
+});
+
+test("un retiro inválido no altera ni el ahorro ni el balance", () => {
+  api.setState({ currentPeriodStart: "2026-09-05", currentPeriodEnd: "2099-10-04" });
+  assert.equal(api.transferirAhorro({ monto: 100001, fecha: "2026-09-06" }), false);
+  assert.equal(api.getState().savings, 100000);
+  assert.deepEqual(api.getState().savingsTransfers, []);
 });

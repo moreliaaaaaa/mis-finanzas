@@ -259,6 +259,39 @@
   box-shadow: none;
 }
 
+.savings-transfer-panel,
+.savings-transfer-history {
+  background: var(--bg-tarjeta);
+  border: 1px solid var(--borde-color);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: var(--texto-principal);
+}
+.savings-transfer-panel > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-primario, #0284c7);
+}
+.savings-transfer-panel p { margin: 0.75rem 0; line-height: 1.5; }
+.savings-transfer-panel form { display: grid; gap: 0.8rem; }
+.savings-transfer-panel label { display: grid; gap: 0.35rem; font-size: 0.875rem; }
+.savings-transfer-panel input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1px solid var(--borde-color);
+  border-radius: 0.5rem;
+  background: var(--bg-principal);
+  color: var(--texto-principal);
+  font-size: 1rem;
+}
+.savings-transfer-panel input:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }
+.savings-transfer-available { font-size: 0.875rem; }
+.savings-transfer-panel button:disabled { opacity: 0.5; cursor: not-allowed; }
+.balance-savings-note { font-size: 0.875rem; line-height: 1.5; margin: 0.5rem 0 0; color: white; }
+
 
 .btn-period-close svg {
   width: 1rem;

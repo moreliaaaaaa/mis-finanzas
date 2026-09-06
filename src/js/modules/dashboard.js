@@ -15,6 +15,7 @@ import { CATEGORIAS, GRUPOS_CATEGORIAS, COLORES_CATEGORIAS } from "../constants.
 import { mostrarToast, actualizarContenido, initializarIconos } from "../ui.js";
 import noteAddIcon from "../../assets/icons/note_add.svg";
 import { periodoVisible } from "./period-dates.js";
+import { sumarTransferencias, transferenciasDelPeriodo } from "./savings-core.js";
 
 /**
  * Recalcula y renderiza el dashboard
@@ -53,7 +54,7 @@ export function calcularSaldosPeriodo(now = new Date()) {
     else egresos += monto;
   });
 
-  return { ingresos, egresos, balance: ingresos - egresos };
+  return { ingresos, egresos, balance: ingresos - egresos + sumarTransferencias(state.savingsTransfers || [], start, end) };
 }
 
 /**
@@ -81,6 +82,14 @@ function filtrarPorPeriodoActual(transacciones, state) {
  * Actualiza las tarjetas de resumen
  */
 function actualizarTarjetas(ingresos, egresos, balance) {
+  const state = getState();
+  const { start, end } = periodoVisible(state);
+  const fromSavings = sumarTransferencias(state.savingsTransfers || [], start, end);
+  const savingsNote = document.getElementById("balance-savings-note");
+  if (savingsNote) {
+    savingsNote.hidden = fromSavings === 0;
+    savingsNote.textContent = `Incluye ${formatMoneda(fromSavings)} transferidos desde tus ahorros`;
+  }
   const ingresoEl = document.getElementById("resumen-ingresos");
   const egresoEl = document.getElementById("resumen-egresos");
   const balEl = document.getElementById("resumen-balance");
@@ -279,6 +288,18 @@ function obtenerTransaccionesFiltradas() {
  * @param {array} transacciones
  * @returns {string}
  */
+function transferenciasFiltradas() {
+  const state = getState();
+  if (state.filtroHistorial !== "todos") return [];
+  const visible = periodoVisible(state);
+  const hasDates = state.filtroFechaInicio || state.filtroFechaFin;
+  const start = hasDates ? state.filtroFechaInicio : visible.start;
+  const end = hasDates ? state.filtroFechaFin : visible.end;
+  const text = (state.busquedaTexto || "").trim().toLowerCase();
+  return transferenciasDelPeriodo(state.savingsTransfers || [], start, end)
+    .filter((item) => !text || `ahorro ${item.detalle || ""} ${item.fecha}`.toLowerCase().includes(text));
+}
+
 function htmlResumenFiltrados(transacciones) {
   let ingresos = 0;
   let egresos = 0;
@@ -289,7 +310,8 @@ function htmlResumenFiltrados(transacciones) {
     else egresos += monto;
   });
 
-  const balance = ingresos - egresos;
+  const transfers = transferenciasFiltradas();
+  const balance = ingresos - egresos + sumarTransferencias(transfers);
   const claseBalance =
     balance > 0 ? " positivo" : balance < 0 ? " negativo" : "";
 
@@ -371,7 +393,7 @@ export function renderizarHistorialDashboard() {
   const fin = inicio + state.elementosPorPagina;
   const itemsPagina = ordenadas.slice(inicio, fin);
 
-  if (totalItems === 0) {
+  if (totalItems === 0 && transferenciasFiltradas().length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon"><img class="asset-icon" src="${noteAddIcon}" alt=""></div>
@@ -382,6 +404,14 @@ export function renderizarHistorialDashboard() {
   }
 
   let html = htmlResumenFiltrados(filtradas);
+
+  const transfers = transferenciasFiltradas();
+  if (transfers.length) {
+    html += `<p class="closed-period-note">El balance incluye ${formatMoneda(sumarTransferencias(transfers))} transferidos desde ahorro.</p>`;
+    html += `<ul class="closed-period-movements">${transfers.map((item) => `<li class="closed-period-movement">
+      <div class="closed-period-movement-copy"><strong>Desde ahorro</strong><span>${escapeHTML(item.fecha)} · ${escapeHTML(item.detalle || "Uso de ahorro")}</span></div>
+      <strong>${formatMoneda(item.monto)}</strong></li>`).join("")}</ul>`;
+  }
 
   html += '<div class="history-list">';
 

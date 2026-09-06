@@ -34,6 +34,7 @@ const appState = {
   // Periodo financiero
   periodDay: 5, // Día de cierre del periodo
   savings: 0, // Ahorro acumulado
+  savingsTransfers: [], // Transferencias del ahorro al balance del período
   debt: 0, // Deuda acumulada
   currentPeriodStart: null, // Fecha inicio del periodo actual (YYYY-MM-DD)
   currentPeriodEnd: null, // Fecha fin del periodo actual (YYYY-MM-DD)

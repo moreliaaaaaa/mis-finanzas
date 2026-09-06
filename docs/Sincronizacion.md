@@ -62,7 +62,23 @@ el importe añadido al ahorro y una copia de cada movimiento (fecha, tipo,
 categoría, detalle y monto). Los cierres antiguos que no guardaron esta copia
 muestran los movimientos que todavía estén disponibles y lo indican en pantalla.
 
-## Pruebas
+## Usar ahorro
+
+En **Historial de periodos → Usar ahorro**, indicar monto, fecha y detalle.
+La transferencia reduce el ahorro y aumenta el balance disponible del período;
+el gasto se registra por separado y los ingresos no cambian.
+
+Ejemplo: con $405.000 ahorrados y $200.000 de balance, registrar un gasto nuevo
+de $350.000 deja el balance en -$150.000. Transferir $150.000 desde ahorro deja
+$255.000 ahorrados y un balance de $0.
+
+Los retiros se muestran junto al ahorro, en el detalle del período cerrado y
+en las exportaciones. El cierre devuelve al ahorro el balance positivo que
+quede, incluyendo dinero transferido y no gastado. Los retiros y el ahorro
+restante se sincronizan en la misma fila de `periodos_financieros`, con control
+de revisión. No requiere una migración SQL adicional.
+
+## Validación
 
 `npm test` comprueba adopción entre dispositivos, respaldo, conflictos de
 revisión, ediciones durante el envío, errores de red y movimientos pendientes.

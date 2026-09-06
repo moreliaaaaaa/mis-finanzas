@@ -53,6 +53,7 @@ import {
   inicializarPeriodo,
   renderizarSeccionPeriodo,
   cerrarPeriodo,
+  transferirAhorro,
   configurarDiaCierre,
   calcularFechasPeriodo,
 } from "./modules/periods.js";
@@ -447,6 +448,7 @@ function setupProfileOptions() {
         paginaActual: 1,
         presupuestos: {},
         savings: 0,
+        savingsTransfers: [],
         debt: 0,
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
@@ -458,6 +460,7 @@ function setupProfileOptions() {
       guardarPeriodoStorage({
         periodDay: state.periodDay || 5,
         savings: 0,
+        savingsTransfers: [],
         debt: 0,
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
@@ -563,6 +566,7 @@ window.renderizarGraficosEgresos = async () => {
 
 // Exponer funciones de periodo
 window.cerrarPeriodo = cerrarPeriodo;
+window.transferirAhorro = transferirAhorro;
 window.cambiarDiaCierre = configurarDiaCierre;
 
 // Iniciar app cuando DOM esté listo

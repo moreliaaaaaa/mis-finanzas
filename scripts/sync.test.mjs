@@ -152,3 +152,24 @@ test("los metadatos de sincronización se aíslan por cuenta", () => {
   definirAlcanceStorage("22222222-2222-4222-8222-222222222222");
   assert.equal(obtenerDelStorage("period_sync"), null);
 });
+
+test("otro dispositivo recibe juntos el ahorro restante y el retiro registrado", async () => {
+  const shared = { ...period(), savings: 255000, savingsTransfers: [{ id: "withdrawal", fecha: "2026-09-06", monto: 150000, detalle: "Cubrir gasto" }] };
+  const db = database({ datos: shared, revision: 2 });
+  guardarPeriodoStorage({ ...period(), savings: 405000 }, { revision: 1, pending: false });
+  await sincronizarPeriodoCuenta(db, userId);
+  assert.equal(getState().savings, 255000);
+  assert.deepEqual(getState().savingsTransfers, shared.savingsTransfers);
+});
+
+test("dos retiros concurrentes no sobrescriben el ahorro compartido", async () => {
+  const first = { ...period(), savings: 255000, savingsTransfers: [{ id: "first", fecha: "2026-09-06", monto: 150000 }] };
+  const second = { ...period(), savings: 205000, savingsTransfers: [{ id: "second", fecha: "2026-09-06", monto: 200000 }] };
+  const db = database({ datos: first, revision: 2 });
+  guardarPeriodoStorage(second, { revision: 1, pending: true });
+  const result = await sincronizarPeriodoCuenta(db, userId);
+  assert.equal(result.conflict, true);
+  assert.deepEqual(db.row.datos, first);
+  assert.deepEqual(obtenerPeriodoStorage(), first);
+  assert.deepEqual(obtenerDelStorage("period_backups")[0].datos, second);
+});
