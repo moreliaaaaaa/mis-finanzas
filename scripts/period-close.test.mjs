@@ -18,6 +18,47 @@ const transactions = [
   { id: "expense", fecha: "2026-09-05", tipo: "egreso", categoria: "compras", monto: 759000, detalle: "Gastos del mes" },
   { id: "older", fecha: "2026-08-05", tipo: "ingreso", categoria: "sueldo", monto: 900000, detalle: "Otro periodo" },
 ];
+
+test("cierre el 4: el día 5 el inicio solo suma 300000 de ingreso y 100000 de gasto", () => {
+  api.setState({ periodDay: 4, currentPeriodStart: "2026-08-05", currentPeriodEnd: "2026-09-04", transactions: [
+    { id: "old-income", fecha: "2026-09-03", tipo: "ingreso", monto: 1064000 },
+    { id: "old-expense", fecha: "2026-09-04", tipo: "egreso", monto: 659000 },
+    { id: "new-income", fecha: "2026-09-05", tipo: "ingreso", monto: 300000 },
+    { id: "new-expense", fecha: "2026-09-05", tipo: "egreso", monto: 100000 },
+  ] });
+  const now = new Date(2026, 8, 5, 0, 0, 0);
+  assert.deepEqual(api.calcularSaldosPeriodo(now), { ingresos: 300000, egresos: 100000, balance: 200000 });
+  assert.equal(api.cerrarPeriodosVencidos(now), 1);
+  assert.equal(api.getState().currentPeriodStart, "2026-09-05");
+  assert.equal(api.getState().currentPeriodEnd, "2026-10-04");
+  assert.equal(api.getState().savings, 505000);
+  assert.equal(api.getState().periodHistory[0].balance, 405000);
+  assert.equal(api.getState().periodHistory[0].transactions.length, 2);
+  assert.equal(api.getState().periodHistory[0].automatic, true);
+  assert.deepEqual(api.calcularSaldosPeriodo(now), { ingresos: 300000, egresos: 100000, balance: 200000 });
+  assert.equal(api.cerrarPeriodosVencidos(now), 0);
+  assert.equal(api.getState().savings, 505000);
+});
+
+test("el día de cierre sigue incluido hasta medianoche local", () => {
+  api.setState({ periodDay: 4, currentPeriodStart: "2026-08-05", currentPeriodEnd: "2026-09-04" });
+  const now = new Date(2026, 8, 4, 23, 59, 59);
+  assert.equal(api.cerrarPeriodosVencidos(now), 0);
+  assert.deepEqual(api.calcularSaldosPeriodo(now), { ingresos: 2264000, egresos: 0, balance: 2264000 });
+});
+
+test("varios meses vencidos se archivan una vez cada uno sin saltar movimientos", () => {
+  api.setState({ periodDay: 4, currentPeriodStart: "2026-06-05", currentPeriodEnd: "2026-07-04", transactions: [
+    { id: "june", fecha: "2026-06-06", tipo: "ingreso", monto: 100 },
+    { id: "july", fecha: "2026-07-05", tipo: "ingreso", monto: 200 },
+    { id: "august", fecha: "2026-08-05", tipo: "ingreso", monto: 300 },
+    { id: "september", fecha: "2026-09-05", tipo: "ingreso", monto: 400 },
+  ] });
+  assert.equal(api.cerrarPeriodosVencidos(new Date(2026, 8, 6)), 3);
+  assert.equal(api.getState().savings, 100600);
+  assert.deepEqual(api.getState().periodHistory.map((entry) => entry.balance), [300, 200, 100]);
+  assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 400, egresos: 0, balance: 400 });
+});
 beforeEach(() => {
   const data = new Map();
   globalThis.localStorage = { getItem: (key) => data.get(key) ?? null,
@@ -32,7 +73,7 @@ beforeEach(() => {
 
 test("cerrar deja ingresos, gastos y balance en cero y suma el sobrante al ahorro", () => {
   api.cerrarPeriodo();
-  assert.deepEqual(api.calcularSaldosPeriodo(), { ingresos: 0, egresos: 0, balance: 0 });
+  assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 0, egresos: 0, balance: 0 });
   assert.equal(api.obtenerResumenPeriodo().balance, 0);
   assert.equal(api.getState().savings, 705000);
   assert.equal(api.getState().currentPeriodStart, "2026-09-06");
@@ -71,11 +112,11 @@ test("editar o eliminar el registro original no cambia la copia del cierre", () 
 test("el ahorro se acumula entre meses y no se cuenta como ingreso del siguiente", () => {
   api.cerrarPeriodo();
   api.addTransaction({ id: "next", fecha: "2026-09-06", tipo: "ingreso", categoria: "sueldo", monto: 50000 });
-  assert.deepEqual(api.calcularSaldosPeriodo(), { ingresos: 50000, egresos: 0, balance: 50000 });
+  assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 50000, egresos: 0, balance: 50000 });
   api.cerrarPeriodo();
   assert.equal(api.getState().savings, 755000);
   assert.equal(api.getState().periodHistory.length, 2);
-  assert.deepEqual(api.calcularSaldosPeriodo(), { ingresos: 0, egresos: 0, balance: 0 });
+  assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 0, egresos: 0, balance: 0 });
 });
 
 test("un déficit no aumenta el ahorro y el nuevo periodo empieza en cero", () => {
@@ -84,7 +125,7 @@ test("un déficit no aumenta el ahorro y el nuevo periodo empieza en cero", () =
   assert.equal(api.getState().savings, 100000);
   assert.equal(api.getState().debt, 759000);
   assert.equal(api.getState().periodHistory[0].savingsAdded, 0);
-  assert.deepEqual(api.calcularSaldosPeriodo(), { ingresos: 0, egresos: 0, balance: 0 });
+  assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 0, egresos: 0, balance: 0 });
 });
 
 test("restaurar un periodo ya cerrado no permite acumular el ahorro dos veces", () => {

@@ -13,6 +13,7 @@ import { PERIOD_CONFIG, CATEGORIAS } from "../constants.js";
 import { mostrarToast } from "../ui.js";
 import { recalcularYRenderizar, limpiarFiltros } from "./dashboard.js";
 import { renderizarPeriodoEnDOM } from "./periods-render.js";
+import { fechaLocalISO } from "./period-dates.js";
 
 
 /* ==========================================================================
@@ -444,7 +445,7 @@ export function configurarDiaCierre(newDay) {
 /**
  * Ejecuta el cierre del periodo actual.
  */
-export function cerrarPeriodo() {
+export function cerrarPeriodo({ automatico = false } = {}) {
   const state = getState();
 
   const transactions = normalizarTransacciones(
@@ -562,6 +563,7 @@ export function cerrarPeriodo() {
     debtAfter: newDebt,
 
     closedAt: new Date().toISOString(),
+    automatic: automatico,
   };
 
 
@@ -602,6 +604,8 @@ export function cerrarPeriodo() {
     ...updates,
   });
 
+  if (automatico) return true;
+
 
   /* Notificación */
 
@@ -632,6 +636,23 @@ export function cerrarPeriodo() {
   limpiarFiltros();
   recalcularYRenderizar();
   renderizarSeccionPeriodo();
+  return true;
+}
+
+// Ejecutar con movimientos completos: en modo local, o después de leer la nube.
+export function cerrarPeriodosVencidos(now = new Date()) {
+  const today = fechaLocalISO(now);
+  let count = 0;
+  while (count < 1200) {
+    const state = getState();
+    const end = state.currentPeriodEnd;
+    if (!crearFechaLocal(end) || end >= today) break;
+    if (!cerrarPeriodo({ automatico: true })) break;
+    count++;
+    if (getState().currentPeriodEnd <= end) break;
+  }
+  if (count) limpiarFiltros();
+  return count;
 }
 
 

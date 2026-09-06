@@ -14,6 +14,7 @@ import {
 import { CATEGORIAS, GRUPOS_CATEGORIAS, COLORES_CATEGORIAS } from "../constants.js";
 import { mostrarToast, actualizarContenido, initializarIconos } from "../ui.js";
 import noteAddIcon from "../../assets/icons/note_add.svg";
+import { periodoVisible } from "./period-dates.js";
 
 /**
  * Recalcula y renderiza el dashboard
@@ -35,15 +36,16 @@ export function recalcularYRenderizar() {
  * Si no hay periodo configurado, considera todas las transacciones.
  * @returns {{ingresos: number, egresos: number, balance: number}}
  */
-export function calcularSaldosPeriodo() {
+export function calcularSaldosPeriodo(now = new Date()) {
   const state = getState();
-  const tienePeriodo = !!(state.currentPeriodStart && state.currentPeriodEnd);
+  const { start, end } = periodoVisible(state, now);
+  const tienePeriodo = !!(start && end);
   let ingresos = 0;
   let egresos = 0;
 
   state.transactions.forEach((t) => {
     if (tienePeriodo) {
-      const enPeriodo = t.fecha >= state.currentPeriodStart && t.fecha <= state.currentPeriodEnd;
+      const enPeriodo = t.fecha >= start && t.fecha <= end;
       if (!enPeriodo) return;
     }
     const monto = parseFloat(t.monto) || 0;
@@ -65,12 +67,13 @@ function filtrarPorPeriodoActual(transacciones, state) {
     return transacciones;
   }
 
-  if (!state.currentPeriodStart || !state.currentPeriodEnd) {
+  const { start, end } = periodoVisible(state);
+  if (!start || !end) {
     return transacciones;
   }
 
   return transacciones.filter((t) => {
-    return t.fecha >= state.currentPeriodStart && t.fecha <= state.currentPeriodEnd;
+    return t.fecha >= start && t.fecha <= end;
   });
 }
 
@@ -161,14 +164,15 @@ function renderizarHomeComplementos() {
   };
 
   if (chip && chipText && eyebrow) {
-    if (state.currentPeriodStart && state.currentPeriodEnd) {
+    const { start, end } = periodoVisible(state);
+    if (start && end) {
       const diasRestantes = Math.max(
         0,
-        Math.ceil(
-          (new Date(state.currentPeriodEnd + "T23:59:59") - new Date()) / 86400000
+        Math.round(
+          (new Date(end + "T00:00:00") - new Date(new Date().setHours(0, 0, 0, 0))) / 86400000
         )
       );
-      const rango = `${formatearCorta(state.currentPeriodStart)} – ${formatearCorta(state.currentPeriodEnd)}`;
+      const rango = `${formatearCorta(start)} – ${formatearCorta(end)}`;
       chipText.textContent = `Periodo ${rango} · ${diasRestantes === 0 ? "último día" : `quedan ${diasRestantes} días`}`;
       eyebrow.textContent = `Balance del periodo · ${rango}`;
       chip.hidden = false;

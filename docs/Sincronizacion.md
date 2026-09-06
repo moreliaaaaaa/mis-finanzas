@@ -36,10 +36,20 @@ contener movimientos que aún no se han subido.
 - Los períodos reemplazados se conservan en `period_backups`, por cuenta.
   Si dos dispositivos modifican la misma revisión, se conserva la versión
   compartida y se avisa del conflicto. El cierre no se suma dos veces.
-- Los períodos vencidos no se cierran automáticamente: el cierre financiero
-  sigue siendo una acción explícita del usuario.
+- Los períodos vencidos se cierran automáticamente después de cargar los
+  movimientos y el período compartido, sin operaciones pendientes de subir.
+  En modo local se cierran con los datos del dispositivo.
 
 ## Cierre mensual
+
+El día de cierre está incluido hasta medianoche local. Con cierre el día 4,
+el inicio pasa al período **05/09–04/10** desde el 5 de septiembre, aunque el
+período anterior siga pendiente de sincronización. Los movimientos del 4 y
+anteriores dejan de sumar en las tarjetas del inicio. Al recuperar conexión,
+se consolida el ahorro y el historial con los movimientos de la nube.
+
+La comprobación se ejecuta al abrir la app, al volver a ella y cada 15 segundos
+mientras está visible. Si hay varios meses vencidos, se archivan en orden.
 
 Al cerrar el período, el saldo positivo se suma a los ahorros acumulados.
 Los ingresos, gastos y balance del inicio se calculan únicamente con las fechas
