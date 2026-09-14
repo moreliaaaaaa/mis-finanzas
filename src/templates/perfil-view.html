@@ -49,12 +49,13 @@
               MF
             </div>
             <div class="profile-photo-actions">
-              <label class="btn-secondary" for="profile-photo-input">
+              <button type="button" class="btn-secondary profile-photo-select" id="profile-photo-select">
                 Subir foto
-              </label>
+              </button>
               <input
                 type="file"
                 id="profile-photo-input"
+                aria-label="Foto de perfil"
                 accept="image/*"
                 hidden
               />

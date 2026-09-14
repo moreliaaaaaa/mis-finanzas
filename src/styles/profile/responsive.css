@@ -3,7 +3,7 @@
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
-    .profile-photo-actions label.btn-secondary,
+    .profile-photo-actions .profile-photo-select,
     .profile-edit-field input,
     .profile-option-row {
         transition: none;
@@ -67,7 +67,7 @@
         width: 100%;
     }
 
-    .profile-photo-actions label.btn-secondary {
+    .profile-photo-actions .profile-photo-select {
         flex: 1 1 auto;
     }
 

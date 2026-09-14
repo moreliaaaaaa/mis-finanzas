@@ -23,6 +23,7 @@ import {
   limpiarFormulario,
   mostrarCargandoBoton,
   ocultarCargandoBoton,
+  cambiarVista,
 } from "../ui.js";
 import { generarId, obtenerFechaHoy } from "../utils.js";
 import { CATEGORIAS, GRUPOS_CATEGORIAS, MENSAJES } from "../constants.js";
@@ -56,7 +57,6 @@ export async function guardarRegistro() {
     monto,
     fecha,
     detalle,
-    timestamp: new Date().toISOString(),
   };
 
   try {
@@ -106,6 +106,8 @@ export function editarRegistro(id) {
   const t = state.transactions.find((x) => x.id === id);
 
   if (!t) return;
+
+  cambiarVista("registro");
 
   // Llenar formulario
   establecerValorInput("#edit-id", t.id);

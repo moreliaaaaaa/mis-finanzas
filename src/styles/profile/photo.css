@@ -21,7 +21,7 @@
     gap: 0.6rem;
 }
 
-.profile-photo-actions label.btn-secondary {
+.profile-photo-actions .profile-photo-select {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -49,7 +49,7 @@
         box-shadow 0.2s ease;
 }
 
-.profile-photo-actions label.btn-secondary:hover {
+.profile-photo-actions .profile-photo-select:hover {
     transform: translateY(-1px);
     background: var(--color-brand-light);
     border-color:
@@ -61,7 +61,7 @@
     box-shadow: 0 5px 15px rgba(15, 23, 42, 0.07);
 }
 
-.profile-photo-actions label.btn-secondary:focus-within {
+.profile-photo-actions .profile-photo-select:focus-visible {
     border-color: var(--color-brand);
     box-shadow:
         0 0 0 3px

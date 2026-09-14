@@ -16,6 +16,8 @@
           <span class="page-kicker">Vista analítica</span>
           <h1 class="section-title">Egresos</h1>
         </div>
+      </div>
+    </div>
   </section>
 
   <nav class="expense-view-switcher" aria-label="Secciones de egresos">
@@ -35,6 +37,9 @@
         type="button"
         class="expense-section-tab active"
         data-expense-section="resumen"
+        id="expense-tab-resumen"
+        aria-controls="expense-panel-resumen"
+        tabindex="0"
         role="tab"
         aria-selected="true"
         onclick="window.cambiarSeccionEgresos('resumen')"
@@ -46,6 +51,9 @@
         type="button"
         class="expense-section-tab"
         data-expense-section="categorias"
+        id="expense-tab-categorias"
+        aria-controls="expense-panel-categorias"
+        tabindex="-1"
         role="tab"
         aria-selected="false"
         onclick="window.cambiarSeccionEgresos('categorias')"
@@ -57,6 +65,9 @@
         type="button"
         class="expense-section-tab"
         data-expense-section="tendencias"
+        id="expense-tab-tendencias"
+        aria-controls="expense-panel-tendencias"
+        tabindex="-1"
         role="tab"
         aria-selected="false"
         onclick="window.cambiarSeccionEgresos('tendencias')"
@@ -70,7 +81,9 @@
   <section
     class="expense-section-panel active"
     data-expense-panel="resumen"
-    aria-label="Resumen de egresos"
+    id="expense-panel-resumen"
+    role="tabpanel"
+    aria-labelledby="expense-tab-resumen"
   >
     <div class="expense-stats">
       <article class="expense-stat">
@@ -123,7 +136,9 @@
   <section
     class="expense-section-panel"
     data-expense-panel="categorias"
-    aria-label="Distribución por categorías"
+    id="expense-panel-categorias"
+    role="tabpanel"
+    aria-labelledby="expense-tab-categorias"
     hidden
   >
     <div class="expenses-layout expenses-layout--categories">
@@ -224,7 +239,9 @@
   <section
     class="expense-section-panel"
     data-expense-panel="tendencias"
-    aria-label="Tendencias de egresos"
+    id="expense-panel-tendencias"
+    role="tabpanel"
+    aria-labelledby="expense-tab-tendencias"
     hidden
   >
     <div class="expenses-layout expenses-layout--trends">

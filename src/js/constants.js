@@ -25,6 +25,7 @@ export const CATEGORIAS = {
     { id: "provisiones", label: "Compra de provisiones", grupo: "hogar" },
     // Taller de Costura
     { id: "hilos_taller", label: "Compra de hilos (Taller)", grupo: "taller" },
+    
     {
       id: "repuestos_maquinas",
       label: "Repuestos de máquinas",

@@ -71,7 +71,9 @@ async function subirPendientes() {
         result = await supabaseClient.from("transacciones").delete()
           .eq("id", item.id).eq("user_id", userId);
       } else if (data) {
-        const payload = Object.fromEntries(["id", "tipo", "categoria", "monto", "fecha", "detalle", "timestamp"]
+        // Solo columnas editables de database/schema.sql. created_at lo genera
+        // SQL; timestamp puede seguir en pendientes antiguos y no se envía.
+        const payload = Object.fromEntries(["id", "tipo", "categoria", "monto", "fecha", "detalle"]
           .filter((key) => data[key] !== undefined).map((key) => [key, data[key]]));
         if (item.accion === "insert") {
           result = await supabaseClient.from("transacciones")

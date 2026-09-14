@@ -25,6 +25,32 @@ contener movimientos que aún no se han subido.
 
 ## Conservación de datos
 
+### Aislamiento local de cuentas (corrección A1)
+
+Al cerrar sesión se vacían movimientos, ahorros, deuda, historial, categorías,
+presupuestos y filtros de la memoria, con la persistencia suspendida. El respaldo
+y la cola pendiente de la cuenta saliente permanecen intactos. Sin una cuenta
+activa no se leen ni escriben datos financieros mediante las funciones de storage.
+
+Una cuenta sin respaldo propio comienza vacía. La clave antigua
+`misfinanzas_data_transactions` ya no se adopta al iniciar: carece de propietario
+y también pudo haber sido generada por el defecto anterior. Se conserva sin
+modificar para no destruir datos que puedan necesitar revisión.
+
+La recuperación antigua es una operación manual de mantenimiento, no un paso
+del arranque. Después de revisar el contenido y confirmar a quién pertenece,
+el módulo `src/js/storage.js` ofrece
+`migrarMovimientosAntiguos({ userId, confirmarPropiedad: true })`.
+Debe ejecutarse en el contexto de la cuenta indicada, con su alcance activo;
+rechaza destinos con movimientos y registra una reclamación única por navegador.
+Devuelve `true` solo si se completó la copia. No sube los registros a la nube
+ni modifica la memoria de una sesión abierta: esa recuperación requiere revisión
+separada antes de activar la sincronización. No está expuesta como botón público.
+
+La corrección evita nuevas adopciones automáticas, pero no elimina movimientos
+que ya hubieran sido copiados a otra cuenta por versiones anteriores: no hay
+información suficiente para distinguirlos de registros legítimos.
+
 - Los movimientos pendientes se guardan con su contenido antes de enviarlos.
   Una consulta fallida conserva el estado local y muestra un aviso.
 - Una consulta exitosa vacía sí representa una cuenta sin movimientos; no
@@ -79,6 +105,26 @@ restante se sincronizan en la misma fila de `periodos_financieros`, con control
 de revisión. No requiere una migración SQL adicional.
 
 ## Validación
+
+### Contrato de movimientos (corrección A2)
+
+El formulario y la sincronización usan `id`, `tipo`, `categoria`, `monto`,
+`fecha` y `detalle`; las altas incluyen además el `user_id` de la sesión.
+`created_at` es la fecha de creación en la base, generada por `default now()`
+en `database/schema.sql`; el cliente no la reescribe al editar. `fecha` sigue
+siendo el día efectivo del movimiento, elegido en el formulario. No se registra
+una fecha separada de última modificación.
+
+Ya no se genera ni envía `timestamp`, que no existe en el esquema. Los pendientes
+de versiones anteriores que lo contienen se filtran al enviarse, conservando
+el resto de su contenido; no es necesario borrar la cola ni recrear movimientos.
+No requiere una migración SQL ni cambios en las políticas de acceso.
+
+Las pruebas ejecutan el alta y la edición del formulario real con transporte
+simulado, que ahora rechaza campos ausentes del SQL versionado. También verifican
+el reenvío de pendientes antiguos y que la edición no envíe `created_at`.
+Esto verifica el contrato del repositorio, no el esquema efectivo de producción.
+Referencia de la operación: [Supabase JavaScript: upsert](https://supabase.com/docs/reference/javascript/upsert).
 
 `npm test` comprueba adopción entre dispositivos, respaldo, conflictos de
 revisión, ediciones durante el envío, errores de red y movimientos pendientes.

@@ -1,14 +1,14 @@
 {
   "name": "Morelia Finanzas",
-  "short_name": "Mis Finanzas",
+  "short_name": "Finanzas",
   "description": "Control inteligente de finanzas, ingresos y gastos del taller de costura",
   "lang": "es",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0284c7",
-  "theme_color": "#0284c7",
+  "background_color": "#5ac4f8",
+  "theme_color": "#54c3fa",
   "categories": ["finance", "productivity"],
   "icons": [
     {

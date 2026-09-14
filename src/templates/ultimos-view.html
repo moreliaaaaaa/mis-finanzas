@@ -60,6 +60,7 @@
           type="text"
           id="busqueda-movimientos"
           class="search-input"
+          aria-label="Buscar movimientos"
           placeholder="Buscar por detalle, categoría o fecha..."
         />
       </div>
@@ -95,22 +96,28 @@
     <div class="history-filters">
       <span class="filter-label">Tipo:</span>
       <button
+        type="button"
         id="filtro-todos"
         class="filter-button active"
+        aria-pressed="true"
         onclick="window.filtrarHistorial('todos')"
       >
         Todos
       </button>
       <button
+        type="button"
         id="filtro-ingreso"
         class="filter-button"
+        aria-pressed="false"
         onclick="window.filtrarHistorial('ingreso')"
       >
         Ingresos
       </button>
       <button
+        type="button"
         id="filtro-egreso"
         class="filter-button"
+        aria-pressed="false"
         onclick="window.filtrarHistorial('egreso')"
       >
         Egresos

@@ -3,8 +3,8 @@
  * Sistema de autenticacion con Supabase y respaldo local.
  */
 
-import { getState, setState } from "../state.js";
-import { guardarEnStorage, obtenerDelStorage, eliminarDelStorage, definirAlcanceStorage } from "../storage.js";
+import { getState, setState, estadoFinancieroVacio } from "../state.js";
+import { guardarEnStorage, obtenerDelStorage, eliminarDelStorage, definirAlcanceStorage, sinPersistenciaFinanciera } from "../storage.js";
 import { mostrarToast, initializarIconos } from "../ui.js";
 import { getSupabaseClient } from "../supabase.js";
 import { recalcularYRenderizar } from "./dashboard.js";
@@ -110,13 +110,16 @@ function aplicarIdPrefixAuth(container, idPrefix) {
     "auth-email": `${idPrefix}-email`,
     "auth-country": `${idPrefix}-country`,
     "auth-password": `${idPrefix}-password`,
+    "auth-message": `${idPrefix}-message`,
   };
 
-  Object.entries(idMap).forEach(([originalId, prefixedId]) => {
-    container.querySelectorAll(`[for="${originalId}"]`).forEach((label) => {
-      label.setAttribute("for", prefixedId);
+  container.querySelectorAll("[for], [aria-describedby], [aria-labelledby], [aria-controls]").forEach((element) => {
+    ["for", "aria-describedby", "aria-labelledby", "aria-controls"].forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+      if (value) element.setAttribute(attribute, value.split(/\s+/).map((id) => idMap[id] || id).join(" "));
     });
-
+  });
+  Object.entries(idMap).forEach(([originalId, prefixedId]) => {
     const element = container.querySelector(`#${originalId}`);
     if (element) {
       element.id = prefixedId;
@@ -249,7 +252,7 @@ function guardarSesionAuth(sessionData = {}) {
     userName: session.userName,
     userEmail: session.userEmail,
     ...(previousUserId !== session.userId
-      ? { transactions: obtenerDelStorage("transactions") || [] }
+      ? { ...estadoFinancieroVacio(), transactions: obtenerDelStorage("transactions") || [] }
       : {}),
   });
 
@@ -286,8 +289,10 @@ function redimensionarImagen(archivo, maxSize = 256) {
 
 function limpiarSesionAuth() {
   eliminarDelStorage(STORAGE_SESSION);
-  definirAlcanceStorage(null);
-  setState({ userId: null, userName: null, userEmail: null });
+  sinPersistenciaFinanciera(() => {
+    setState({ ...estadoFinancieroVacio(), userId: null, userName: null, userEmail: null });
+    definirAlcanceStorage(null);
+  });
 }
 
 export function inicializarAuth() {
@@ -721,6 +726,7 @@ export function renderizarPerfil() {
   const nameInput = document.getElementById("profile-edit-name");
   const emailInput = document.getElementById("profile-edit-email");
   const photoInput = document.getElementById("profile-photo-input");
+  const photoSelectBtn = document.getElementById("profile-photo-select");
   const photoRemoveBtn = document.getElementById("profile-photo-remove");
   const cancelBtn = document.getElementById("profile-edit-cancel");
 
@@ -743,6 +749,8 @@ export function renderizarPerfil() {
     if (editPanel) editPanel.hidden = true;
     if (photoInput) photoInput.value = "";
   });
+
+  photoSelectBtn?.addEventListener("click", () => photoInput?.click());
 
   photoInput?.addEventListener("change", async () => {
     const archivo = photoInput.files?.[0];
@@ -878,16 +886,16 @@ export async function renderizarPanelAuth(containerId = "auth-panel") {
             <span>País</span>
             <select id="${idPrefix}-country" name="country">${countryOptions}</select>
           </label>
-          <label class="auth-field" for="${idPrefix}-password">
-            <span>Contraseña</span>
+          <div class="auth-field">
+            <label for="${idPrefix}-password"><span>Contraseña</span></label>
             <div class="password-wrapper">
-              <input type="password" id="${idPrefix}-password" name="password" placeholder="••••" autocomplete="current-password" minlength="6" maxlength="128" spellcheck="false" required>
+              <input type="password" id="${idPrefix}-password" name="password" placeholder="••••" autocomplete="current-password" minlength="6" maxlength="60" spellcheck="false" aria-describedby="${idPrefix}-message" required>
               <button type="button" class="toggle-password-btn" data-auth-action="toggle-password" aria-label="Mostrar contraseña" aria-pressed="false">
                 <i data-lucide="eye-off"></i>
               </button>
             </div>
-          </label>
-          <p class="auth-message" role="status" aria-live="polite"></p>
+          </div>
+          <p id="${idPrefix}-message" class="auth-message" role="status" aria-live="polite"></p>
           <div class="auth-actions">
             <button type="submit" class="auth-btn auth-btn-primary btn-primary" data-auth-action="login">Iniciar sesión</button>
             <button type="button" class="auth-btn auth-btn-secondary btn-secondary" data-auth-action="signup">Registrarse</button>

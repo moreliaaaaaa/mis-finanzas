@@ -244,6 +244,7 @@ export function cambiarVista(vistaId) {
   });
 
   setNavMenuState(false);
+  document.dispatchEvent(new CustomEvent("view-change", { detail: vistaId }));
 }
 
 /**
@@ -443,6 +444,7 @@ export function cambiarSeccionEgresos(seccion = "resumen", opciones = {}) {
     const esActivo = tab.dataset.expenseSection === activa;
     tab.classList.toggle("active", esActivo);
     tab.setAttribute("aria-selected", String(esActivo));
+    tab.tabIndex = esActivo ? 0 : -1;
   });
 
   const select = document.getElementById("expense-section-select");

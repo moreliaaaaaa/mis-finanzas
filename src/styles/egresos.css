@@ -374,8 +374,9 @@ html.dark .expense-stat-icon--top {
   grid-column: auto;
 }
 
-.chart-canvas--wide {
+.chart-wrapper--wide .chart-canvas--wide {
   max-width: none;
+  aspect-ratio: auto;
 }
 
 /* Columna del desglose al lado del gráfico en escritorio */

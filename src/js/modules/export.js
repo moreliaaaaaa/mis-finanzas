@@ -7,6 +7,7 @@ import { getState } from "../state.js";
 import { mostrarToast } from "../ui.js";
 import { CATEGORIAS, MENSAJES } from "../constants.js";
 import { escapeHTML, formatMoneda, formatearFechaTexto, obtenerFechaHoy } from "../utils.js";
+import { periodoVisible } from "./period-dates.js";
 
 function neutralizarFormulaCSV(value) {
   const text = String(value ?? "");
@@ -24,20 +25,52 @@ function etiquetaCategoria(categoriaId) {
   return catObj ? catObj.label : categoriaId;
 }
 
+export function obtenerDatosPeriodoActual(state = getState(), now = new Date()) {
+  const { start, end } = periodoVisible(state, now);
+  const transactions = (state.transactions || []).filter(
+    (transaction) => transaction.fecha >= start && transaction.fecha <= end
+  );
+  const savingsTransfers = (state.savingsTransfers || []).filter(
+    (transfer) => transfer.fecha >= start && transfer.fecha <= end
+  );
+
+  return { start, end, transactions, savingsTransfers };
+}
+
+export function obtenerDatosPeriodoHistorico(entry, state = getState()) {
+  if (!entry?.start || !entry?.end) return null;
+
+  return {
+    start: entry.start,
+    end: entry.end,
+    transactions: Array.isArray(entry.transactions)
+      ? entry.transactions
+      : (state.transactions || []).filter(
+          (transaction) => transaction.fecha >= entry.start && transaction.fecha <= entry.end
+        ),
+    savingsTransfers: Array.isArray(entry.savingsTransfers)
+      ? entry.savingsTransfers
+      : (state.savingsTransfers || []).filter(
+          (transfer) => transfer.fecha >= entry.start && transfer.fecha <= entry.end
+        ),
+  };
+}
+
 /**
  * Exporta transacciones a CSV
  */
-export function exportarCSV() {
-  const state = getState();
+export function exportarCSV(datos = null) {
+  const exportData = datos || obtenerDatosPeriodoActual(getState());
+  const { start, end, transactions, savingsTransfers } = exportData;
 
-  if (state.transactions.length === 0) {
+  if (transactions.length === 0) {
     mostrarToast("error", MENSAJES.error.noHayDatos);
     return;
   }
 
   const rows = [["ID", "Fecha", "Tipo", "Categoría", "Monto", "Detalle"]];
 
-  state.transactions.forEach((t) => {
+  transactions.forEach((t) => {
     rows.push([
       t.id,
       t.fecha,
@@ -47,7 +80,7 @@ export function exportarCSV() {
       t.detalle || "Sin detalle",
     ]);
   });
-  (state.savingsTransfers || []).forEach((item) => {
+  savingsTransfers.forEach((item) => {
     rows.push([item.id, item.fecha, "transferencia_ahorro", "Ahorro al balance", item.monto, item.detalle || "Uso de ahorro"]);
   });
 
@@ -55,7 +88,7 @@ export function exportarCSV() {
 
   descargarArchivo(
     csvContent,
-    `Finanzas_Export_${obtenerFechaHoy()}.csv`,
+    `Finanzas_Periodo_${start}_${end}.csv`,
     "text/csv",
   );
   mostrarToast("success", MENSAJES.success.descargar);
@@ -166,10 +199,12 @@ export function generarReporte() {
 /**
  * Exporta reporte como PDF (abre ventana de impresión)
  */
-export function exportarPDF() {
+export function exportarPDF(datos = null) {
   const state = getState();
+  const exportData = datos || obtenerDatosPeriodoActual(state);
+  const { start, end, transactions, savingsTransfers } = exportData;
 
-  if (state.transactions.length === 0) {
+  if (transactions.length === 0) {
     mostrarToast("error", MENSAJES.error.noHayDatos);
     return;
   }
@@ -177,7 +212,7 @@ export function exportarPDF() {
   let totalIngresos = 0;
   let totalEgresos = 0;
 
-  state.transactions.forEach((t) => {
+  transactions.forEach((t) => {
     const monto = parseFloat(t.monto) || 0;
     if (t.tipo === "ingreso") {
       totalIngresos += monto;
@@ -188,17 +223,17 @@ export function exportarPDF() {
 
   const balance = totalIngresos - totalEgresos;
 
-  const transferenciasHTML = (state.savingsTransfers || []).length ? `
+  const transferenciasHTML = savingsTransfers.length ? `
     <section style="margin-top:2rem">
       <h2 style="font-size:1.1rem;margin-bottom:0.5rem">Transferencias desde ahorro</h2>
       <p style="font-size:0.8rem;margin-bottom:1rem">Movimientos internos: no aumentan los ingresos totales del reporte.</p>
       <table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th></tr></thead>
-      <tbody>${state.savingsTransfers.map((item) => `<tr><td>${escapeHTML(formatearFechaTexto(item.fecha))}</td><td>${escapeHTML(item.detalle || "Uso de ahorro")}</td><td style="text-align:right">${escapeHTML(formatMoneda(item.monto))}</td></tr>`).join("")}</tbody></table>
+      <tbody>${savingsTransfers.map((item) => `<tr><td>${escapeHTML(formatearFechaTexto(item.fecha))}</td><td>${escapeHTML(item.detalle || "Uso de ahorro")}</td><td style="text-align:right">${escapeHTML(formatMoneda(item.monto))}</td></tr>`).join("")}</tbody></table>
     </section>` : "";
 
   // Generar HTML del reporte
   let tablaHTML = "";
-  state.transactions.forEach((t) => {
+  transactions.forEach((t) => {
     const nombreCat = escapeHTML(etiquetaCategoria(t.categoria));
     const tipoLabel = t.tipo === "ingreso" ? "Ingreso" : "Egreso";
     const color = t.tipo === "ingreso" ? "#059669" : "#dc2626";
@@ -282,7 +317,7 @@ export function exportarPDF() {
       </table>
       ${transferenciasHTML}
       <div class="footer">
-        <p>MisFinanzas - Control inteligente de finanzas | ${state.transactions.length} transacciones</p>
+        <p>MisFinanzas - Reporte del periodo ${formatearFechaTexto(start)} - ${formatearFechaTexto(end)} | ${transactions.length} transacciones</p>
       </div>
       <script>
         window.addEventListener("load", () => {
@@ -306,9 +341,23 @@ export function exportarPDF() {
   }
 }
 
+export function exportarPeriodoHistoricoCSV(entry) {
+  const datos = obtenerDatosPeriodoHistorico(entry);
+  if (datos) exportarCSV(datos);
+}
+
+export function exportarPeriodoHistoricoPDF(entry) {
+  const datos = obtenerDatosPeriodoHistorico(entry);
+  if (datos) exportarPDF(datos);
+}
+
 export default {
   exportarCSV,
   exportarJSON,
   generarReporte,
   exportarPDF,
+  obtenerDatosPeriodoActual,
+  obtenerDatosPeriodoHistorico,
+  exportarPeriodoHistoricoCSV,
+  exportarPeriodoHistoricoPDF,
 };

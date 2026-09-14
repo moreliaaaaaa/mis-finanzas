@@ -210,6 +210,16 @@ function renderDetalleCierre(entry) {
   const dinero = (value) => Number.isFinite(Number(value)) ? formatMoneda(Number(value)) : "&mdash;";
   return `
     <div class="closed-period-detail">
+      <div class="closed-period-actions" aria-label="Exportar periodo">
+        <button type="button" class="btn-secondary btn-sm" data-period-export="csv" data-period-key="${escapeHTML(`${entry.start}_${entry.end}`)}">
+          <i data-lucide="download" aria-hidden="true"></i>
+          <span>Descargar CSV</span>
+        </button>
+        <button type="button" class="btn-secondary btn-sm" data-period-export="pdf" data-period-key="${escapeHTML(`${entry.start}_${entry.end}`)}">
+          <i data-lucide="download" aria-hidden="true"></i>
+          <span>Exportar PDF</span>
+        </button>
+      </div>
       <dl class="closed-period-totals">
         <div><dt>Ingresos</dt><dd class="text-ingreso">${dinero(entry.totalIngresos)}</dd></div>
         <div><dt>Gastos</dt><dd class="text-egreso">${dinero(entry.totalEgresos)}</dd></div>

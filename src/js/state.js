@@ -42,6 +42,17 @@ const appState = {
 };
 
 // Listeners para cambios de estado
+export function estadoFinancieroVacio() {
+  return {
+    transactions: [], tipoActivoForm: "egreso", filtroHistorial: "todos",
+    busquedaTexto: "", filtroFechaInicio: null, filtroFechaFin: null,
+    paginaActual: 1, customCategories: [], presupuestos: {},
+    periodDay: 5, savings: 0, savingsTransfers: [], debt: 0,
+    currentPeriodStart: null, currentPeriodEnd: null, periodHistory: [],
+    error: null, isLoading: false,
+  };
+}
+
 const listeners = [];
 
 /**

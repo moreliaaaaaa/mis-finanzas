@@ -11,6 +11,9 @@ let chartInstance = null;
 let chartTendenciaInstance = null;
 let chartComparativaInstance = null;
 let chartLoader = null;
+let egresosRender = 0;
+let tendenciaRender = 0;
+let comparativaRender = 0;
 
 async function cargarChart() {
   if (!chartLoader) {
@@ -70,6 +73,7 @@ function obtenerEgresosPorCategoria() {
  * Actualiza el gráfico de egresos
  */
 export async function actualizarGraficoEgresos() {
+  const render = ++egresosRender;
   const state = getState();
   const ctx = document.getElementById("chart-egresos-container");
   const fallback = document.getElementById("chart-fallback");
@@ -95,13 +99,10 @@ export async function actualizarGraficoEgresos() {
   const dataValues = totales.map((item) => item.total);
   const backgroundColors = totales.map((item) => item.color);
 
-  // Destruir instancia anterior
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-
   const isDark = state.currentTheme === "dark";
   const Chart = await cargarChart();
+  if (render !== egresosRender) return;
+  chartInstance?.destroy();
 
   chartInstance = new Chart(ctx, {
     type: "doughnut",
@@ -282,6 +283,7 @@ function agruparPorMes(transactions) {
  * Renderiza gráfico de tendencia mensual (ingresos vs egresos)
  */
 export async function renderizarGraficoTendencia() {
+  const render = ++tendenciaRender;
   const state = getState();
   const canvas = document.getElementById("chart-tendencia");
   if (!canvas) return;
@@ -316,6 +318,7 @@ export async function renderizarGraficoTendencia() {
 
   const isDark = state.currentTheme === "dark";
   const Chart = await cargarChart();
+  if (render !== tendenciaRender) return;
 
   chartTendenciaInstance = new Chart(canvas, {
     type: "line",
@@ -394,6 +397,7 @@ export async function renderizarGraficoTendencia() {
  * Renderiza gráfico comparativo mes a mes
  */
 export async function renderizarGraficoComparativa() {
+  const render = ++comparativaRender;
   const state = getState();
   const canvas = document.getElementById("chart-comparativa");
   if (!canvas) return;
@@ -433,6 +437,7 @@ export async function renderizarGraficoComparativa() {
 
   const isDark = state.currentTheme === "dark";
   const Chart = await cargarChart();
+  if (render !== comparativaRender) return;
 
   chartComparativaInstance = new Chart(canvas, {
     type: "bar",
@@ -584,6 +589,10 @@ export async function crearGraficoLineas(canvasId, labels, data) {
  * Destruye todos los gráficos
  */
 export function destruirGraficos() {
+  // Invalidar también las solicitudes que aún esperan cargar Chart.js.
+  egresosRender++;
+  tendenciaRender++;
+  comparativaRender++;
   if (chartInstance) {
     chartInstance.destroy();
     chartInstance = null;

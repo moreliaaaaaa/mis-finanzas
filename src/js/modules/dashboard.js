@@ -525,6 +525,7 @@ export function filtrarHistorial(filtro) {
   filtros.forEach((f) => {
     const btn = document.getElementById(`filtro-${f}`);
     if (btn) {
+      btn.setAttribute("aria-pressed", String(f === filtro));
       if (f === filtro) {
         btn.className = "filter-button active";
       } else {
@@ -587,6 +588,7 @@ export function limpiarFiltros() {
     const btn = document.getElementById(`filtro-${f}`);
     if (btn) {
       btn.className = f === "todos" ? "filter-button active" : "filter-button";
+      btn.setAttribute("aria-pressed", String(f === "todos"));
     }
   });
 

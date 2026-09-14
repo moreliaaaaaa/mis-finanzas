@@ -10,6 +10,16 @@ const STORAGE_PERIOD_KEY = "misfinanzas_period";
 // Alcance por usuario: los datos se guardan con un sufijo por usuario para que
 // cada cuenta tenga su propio respaldo local en el mismo navegador.
 let alcanceStorage = null;
+let propietarioStorage = null;
+let persistenciaSuspendida = false;
+
+// Solo para transiciones síncronas de cuenta; nunca envolver trabajo async.
+export function sinPersistenciaFinanciera(callback) {
+  const anterior = persistenciaSuspendida;
+  persistenciaSuspendida = true;
+  try { return callback(); }
+  finally { persistenciaSuspendida = anterior; }
+}
 
 // Estas claves son globales (no dependen del usuario)
 const CLAVES_GLOBALES = new Set(["misfinanzas_users", "misfinanzas_session"]);
@@ -19,6 +29,7 @@ const CLAVES_GLOBALES = new Set(["misfinanzas_users", "misfinanzas_session"]);
  * @param {string|null} userId
  */
 export function definirAlcanceStorage(userId) {
+  propietarioStorage = userId ? String(userId) : null;
   if (!userId) {
     alcanceStorage = null;
     return;
@@ -37,6 +48,7 @@ function sufijoAlcance(key) {
  * @param {any} data
  */
 export function guardarEnStorage(key, data) {
+  if (!CLAVES_GLOBALES.has(key) && (!alcanceStorage || persistenciaSuspendida)) return false;
   try {
     const fullKey = `${STORAGE_KEY}_${key}${sufijoAlcance(key)}`;
     localStorage.setItem(fullKey, JSON.stringify(data));
@@ -53,6 +65,7 @@ export function guardarEnStorage(key, data) {
  * @returns {any}
  */
 export function obtenerDelStorage(key) {
+  if (!CLAVES_GLOBALES.has(key) && !alcanceStorage) return null;
   try {
     const fullKey = `${STORAGE_KEY}_${key}${sufijoAlcance(key)}`;
     const data = localStorage.getItem(fullKey);
@@ -68,6 +81,7 @@ export function obtenerDelStorage(key) {
  * @param {string} key
  */
 export function eliminarDelStorage(key) {
+  if (!CLAVES_GLOBALES.has(key) && (!alcanceStorage || persistenciaSuspendida)) return false;
   try {
     const fullKey = `${STORAGE_KEY}_${key}${sufijoAlcance(key)}`;
     localStorage.removeItem(fullKey);
@@ -92,6 +106,28 @@ export function limpiarStorage() {
     return true;
   } catch (error) {
     console.error("Error limpiando storage:", error);
+    return false;
+  }
+}
+
+// Recuperación manual de una copia sin propietario. Nunca se invoca al iniciar.
+// Reservar primero el propietario impide que un fallo permita reclamarla desde otra cuenta.
+export function migrarMovimientosAntiguos({ userId, confirmarPropiedad = false } = {}) {
+  if (!confirmarPropiedad || !userId || userId !== propietarioStorage || persistenciaSuspendida) return false;
+  const claimKey = `${STORAGE_KEY}_legacy_transactions_claim`;
+  try {
+    const claim = JSON.parse(localStorage.getItem(claimKey) || "null");
+    if (claim && (claim.userId !== userId || claim.completed)) return false;
+    const existentes = obtenerDelStorage("transactions");
+    if (existentes !== null && (!Array.isArray(existentes) || existentes.length)) return false;
+    const datos = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_transactions`) || "null");
+    if (!Array.isArray(datos) || !datos.length) return false;
+    localStorage.setItem(claimKey, JSON.stringify({ userId, completed: false }));
+    if (!guardarEnStorage("transactions", datos)) return false;
+    localStorage.setItem(claimKey, JSON.stringify({ userId, completed: true }));
+    return true;
+  } catch (error) {
+    console.error("No se pudo recuperar el respaldo antiguo:", error);
     return false;
   }
 }
@@ -206,6 +242,7 @@ export function obtenerTema() {
  * @param {object} periodData - { periodDay, savings, debt, currentPeriodStart, currentPeriodEnd, periodHistory }
  */
 export function guardarPeriodoStorage(periodData, sync = null) {
+  if (!alcanceStorage || persistenciaSuspendida) return false;
   try {
     const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
     localStorage.setItem(fullKey, JSON.stringify(periodData));
@@ -226,6 +263,7 @@ export function guardarPeriodoStorage(periodData, sync = null) {
  * @returns {object|null}
  */
 export function obtenerPeriodoStorage() {
+  if (!alcanceStorage) return null;
   try {
     const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
     const data = localStorage.getItem(fullKey);
@@ -240,6 +278,7 @@ export function obtenerPeriodoStorage() {
  * Elimina los datos del periodo financiero del usuario actual.
  */
 export function eliminarPeriodoStorage() {
+  if (!alcanceStorage || persistenciaSuspendida) return false;
   try {
     const fullKey = `${STORAGE_PERIOD_KEY}${sufijoAlcance("misfinanzas_period")}`;
     localStorage.removeItem(fullKey);

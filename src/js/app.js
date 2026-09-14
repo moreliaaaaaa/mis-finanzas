@@ -41,7 +41,12 @@ import {
   eliminarRegistro,
   cancelarEdicion,
 } from "./modules/transactions.js";
-import { exportarCSV, exportarPDF } from "./modules/export.js";
+import {
+  exportarCSV,
+  exportarPDF,
+  exportarPeriodoHistoricoCSV,
+  exportarPeriodoHistoricoPDF,
+} from "./modules/export.js";
 import {
   filtrarHistorial,
   buscarTransacciones,
@@ -248,6 +253,28 @@ export async function initApp() {
  * Configura listeners de eventos del DOM
  */
 function setupEventListeners() {
+  document.addEventListener("view-change", ({ detail }) => {
+    if (detail === "historial-periodos") renderizarSeccionPeriodo();
+    if (detail === "presupuesto") renderizarPresupuesto("budget-section-view");
+  });
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-period-export]");
+    if (!button) return;
+
+    const periodKey = button.dataset.periodKey;
+    const entry = getState().periodHistory.find(
+      (period) => `${period.start}_${period.end}` === periodKey
+    );
+    if (!entry) return;
+
+    if (button.dataset.periodExport === "csv") {
+      exportarPeriodoHistoricoCSV(entry);
+    } else if (button.dataset.periodExport === "pdf") {
+      exportarPeriodoHistoricoPDF(entry);
+    }
+  });
+
   // Formulario de transacciones
   const form = document.getElementById("form-movimiento");
   if (form) {
@@ -290,6 +317,20 @@ function setupEventListeners() {
     });
   }
 
+  // Navegación por teclado entre las pestañas de egresos.
+  const expenseTabs = document.querySelector(".expense-section-tabs");
+  expenseTabs?.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    const tabs = [...expenseTabs.querySelectorAll("[data-expense-section]")];
+    const index = tabs.indexOf(event.target.closest("[data-expense-section]"));
+    if (index < 0) return;
+    event.preventDefault();
+    const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 :
+      (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    cambiarSeccionEgresos(tabs[nextIndex].dataset.expenseSection);
+    tabs[nextIndex].focus();
+  });
+
   // Botón exportar
   const exportBtn = document.querySelector('[onclick*="exportarCSV"]');
 
@@ -302,6 +343,20 @@ function setupEventListeners() {
   const navBtn = document.getElementById("nav-menu-btn");
   const navMenu = document.getElementById("nav-menu");
   const navBackdrop = document.getElementById("nav-backdrop");
+  // La plantilla del encabezado ya está cargada al registrar estos eventos.
+  const navMap = new Map([
+    ["home", irAHome],
+    ["registro", irARegistro],
+    ["ultimos", irAUltimos],
+    ["egresos", irAEgresos],
+    ["historial-periodos", irAHistorialPeriodos],
+    ["presupuesto", irAPresupuesto],
+    ["perfil", irAPerfil],
+  ]);
+  navMenu?.querySelectorAll(".dropdown-item[data-nav-view]").forEach((button) => {
+    const navegar = navMap.get(button.dataset.navView);
+    if (navegar) button.addEventListener("click", navegar);
+  });
   if (navBtn) {
     navBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -490,6 +545,7 @@ function setupProfileOptions() {
  */
 function setupStateSubscribers() {
   subscribe((newState) => {
+    if (!newState.userId) return;
     // Guardar estado en storage
     guardarEnStorage("transactions", newState.transactions);
     guardarEnStorage("tipoActivoForm", newState.tipoActivoForm);
@@ -500,8 +556,7 @@ function setupStateSubscribers() {
 /**
  * Carga el respaldo local del usuario actual.
  * Las cuentas nuevas empiezan vacías (sin datos de demostración).
- * Si no existe respaldo por usuario, intenta recuperar el respaldo local
- * antiguo (sin separar) para no perder datos tras la migración por usuario.
+ * Nunca adopta respaldos globales: su propietario no se puede determinar.
  */
 function cargarMovimientosLocales() {
   const datos = obtenerDelStorage("transactions");
@@ -509,20 +564,6 @@ function cargarMovimientosLocales() {
   if (Array.isArray(datos)) {
     setState({ transactions: datos });
     return;
-  }
-
-  // Migración del respaldo local guardado antes de separar por usuario
-  try {
-    const legacy = localStorage.getItem("misfinanzas_data_transactions");
-    if (legacy) {
-      const datosLegacy = JSON.parse(legacy);
-      if (Array.isArray(datosLegacy) && datosLegacy.length > 0) {
-        setState({ transactions: datosLegacy });
-        return;
-      }
-    }
-  } catch (error) {
-    console.warn("No se pudo migrar el respaldo local antiguo:", error);
   }
 
   setState({ transactions: [] });
@@ -541,6 +582,8 @@ window.filtrarPorRangoFechas = filtrarPorRangoFechas;
 window.limpiarFiltros = limpiarFiltros;
 window.cambiarPagina = cambiarPagina;
 window.exportarPDF = exportarPDF;
+window.exportarPeriodoHistoricoCSV = exportarPeriodoHistoricoCSV;
+window.exportarPeriodoHistoricoPDF = exportarPeriodoHistoricoPDF;
 window.cambiarSeccionEgresos = cambiarSeccionEgresos;
 // Función para renderizar gráficos de egresos
 window.renderizarGraficosEgresos = async () => {

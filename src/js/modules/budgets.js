@@ -127,7 +127,7 @@ export function renderizarPresupuesto(containerId = "budget-widget") {
     <div class="budget-widget">
       <div class="budget-header">
         <h3>Presupuesto ${nombreMes}</h3>
-        <button type="button" id="btn-config-presupuesto" class="btn-icon" title="Configurar presupuesto">
+        <button type="button" id="btn-config-presupuesto" class="btn-icon" title="Configurar presupuesto" aria-controls="presupuesto-config" aria-expanded="${!presupuesto}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
@@ -137,10 +137,6 @@ export function renderizarPresupuesto(containerId = "budget-widget") {
     html += `
       <div class="budget-empty">
         <p>Sin presupuesto configurado</p>
-        <div class="budget-config-form">
-          <input type="number" id="presupuesto-input" placeholder="Ej: 50000" min="0" step="1000">
-          <button type="button" id="btn-guardar-presupuesto" class="btn-primary btn-sm">Guardar</button>
-        </div>
       </div>
     `;
   } else if (estado) {
@@ -180,25 +176,36 @@ export function renderizarPresupuesto(containerId = "budget-widget") {
     `;
   }
 
-  html += `</div>`;
+  // El formulario también debe existir cuando ya hay un presupuesto guardado.
+  html += `
+    <form id="presupuesto-config" class="budget-config-form" ${presupuesto ? "hidden" : ""}>
+      <input type="number" id="presupuesto-input" aria-label="Límite mensual" placeholder="Ej: 50000"
+        min="0.01" step="0.01" required value="${Number(presupuesto?.limite) || ""}">
+      <button type="submit" id="btn-guardar-presupuesto" class="btn-primary btn-sm">Guardar</button>
+    </form>
+  </div>`;
   container.innerHTML = html;
 
   // Event listeners
-  const btnConfig = document.getElementById("btn-config-presupuesto");
-  const btnGuardar = document.getElementById("btn-guardar-presupuesto");
+  const btnConfig = container.querySelector("#btn-config-presupuesto");
+  const form = container.querySelector(".budget-config-form");
 
   if (btnConfig) {
     btnConfig.addEventListener("click", () => {
-      const form = container.querySelector(".budget-config-form");
-      if (form) form.classList.toggle("hidden");
+      if (form) {
+        form.hidden = !form.hidden;
+        btnConfig.setAttribute("aria-expanded", String(!form.hidden));
+        if (!form.hidden) form.querySelector("input")?.focus();
+      }
     });
   }
 
-  if (btnGuardar) {
-    btnGuardar.addEventListener("click", () => {
-      const input = document.getElementById("presupuesto-input");
+  if (form) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = form.querySelector("#presupuesto-input");
       const valor = parseFloat(input?.value) || 0;
-      if (valor > 0) {
+      if (Number.isFinite(valor) && valor > 0) {
         guardarPresupuesto(mesActual, valor);
         renderizarPresupuesto(containerId);
       } else {
