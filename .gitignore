@@ -32,5 +32,6 @@ yarn-debug.log*
 # Temporal
 .tmp/
 temp/
+supabase/.temp/
 .playwright-cli/
 output/
