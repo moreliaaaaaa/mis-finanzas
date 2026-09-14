@@ -71,6 +71,11 @@ beforeEach(() => {
     filtroHistorial: "egreso", filtroFechaInicio: "2026-08-06", filtroFechaFin: "2026-09-05", busquedaTexto: "mes", paginaActual: 3 });
 });
 
+test("el balance neto combina el periodo, el ahorro y la deuda", () => {
+  api.setState({ savings: 605000, debt: 0 });
+  assert.equal(api.calcularBalanceNeto(-580300), 24700);
+});
+
 test("cerrar deja ingresos, gastos y balance en cero y suma el sobrante al ahorro", () => {
   api.cerrarPeriodo();
   assert.deepEqual(api.calcularSaldosPeriodo(new Date(2026, 8, 6)), { ingresos: 0, egresos: 0, balance: 0 });

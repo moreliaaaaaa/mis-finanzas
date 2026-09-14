@@ -58,6 +58,16 @@ export function calcularSaldosPeriodo(now = new Date()) {
 }
 
 /**
+ * Calcula el patrimonio neto disponible durante el periodo actual.
+ * @param {number} balance Balance de ingresos, egresos y transferencias del periodo
+ * @param {object} state Estado financiero
+ * @returns {number}
+ */
+export function calcularBalanceNeto(balance, state = getState()) {
+  return balance + (Number(state.savings) || 0) - (Number(state.debt) || 0);
+}
+
+/**
  * Aplica el filtro de periodo actual cuando no hay rango de fechas explícito
  * @param {array} transacciones
  * @param {object} state
@@ -96,11 +106,12 @@ function actualizarTarjetas(ingresos, egresos, balance) {
   const cardBalance = document.getElementById("card-balance");
   const balNetoEl = document.getElementById("resumen-balance-neto");
   const cardBalanceNeto = document.getElementById("card-balance-neto");
+  const balanceNeto = calcularBalanceNeto(balance, state);
 
   if (ingresoEl) ingresoEl.textContent = formatMoneda(ingresos);
   if (egresoEl) egresoEl.textContent = formatMoneda(egresos);
   if (balEl) balEl.textContent = formatMoneda(balance);
-  if (balNetoEl) balNetoEl.textContent = formatMoneda(balance);
+  if (balNetoEl) balNetoEl.textContent = formatMoneda(balanceNeto);
 
   if (cardBalance) {
     cardBalance.classList.remove("positivo", "negativo");
@@ -110,8 +121,8 @@ function actualizarTarjetas(ingresos, egresos, balance) {
 
   if (cardBalanceNeto) {
     cardBalanceNeto.classList.remove("positivo", "negativo");
-    if (balance > 0) cardBalanceNeto.classList.add("positivo");
-    else if (balance < 0) cardBalanceNeto.classList.add("negativo");
+    if (balanceNeto > 0) cardBalanceNeto.classList.add("positivo");
+    else if (balanceNeto < 0) cardBalanceNeto.classList.add("negativo");
   }
 
   // Badge del hero: proporción de gastos frente a ingresos
